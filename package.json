@@ -1,0 +1,19 @@
+{
+  "name": "fixly",
+  "version": "1.0.0",
+  "description": "AI-powered incident detection and self-healing system",
+  "main": "src/server/server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server/server.js",
+    "test:types": "node tests/types.test.js",
+    "test:models": "node tests/models.test.js",
+    "db:check": "node scripts/check_db.js",
+    "test": "npm run test:types && npm run test:models"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "mongoose": "^8.2.0"
+  },
+  "devDependencies": {}
+}

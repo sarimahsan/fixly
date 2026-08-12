@@ -8,8 +8,8 @@ This file is dynamically updated by coding agents to record phase completions an
 
 | Phase / Sub-module | Domain Area | Status | Verification Command | Verified Date |
 | :--- | :--- | :--- | :--- | :--- |
-| **Phase 0.1 — Shared Types & Constants** | Foundation | 🔴 Pending | `npm run test:types` | - |
-| **Phase 0.2 — Database Schemas & Models** | Foundation | 🔴 Pending | `npm run test:models` | - |
+| **Phase 0.1 — Shared Types & Constants** | Foundation | 🟢 DONE | `npm run test:types` | 2026-08-12 |
+| **Phase 0.2 — Database Schemas & Models** | Foundation | 🟢 DONE | `npm run test:models` | 2026-08-12 |
 | **Phase 1.1 — Authentication & JWT Session** | Auth & Roles | 🔴 Pending | `npm run test:auth` | - |
 | **Phase 1.2 — Role-Based Access Control (RBAC)** | Auth & Roles | 🔴 Pending | `npm run test:rbac` | - |
 | **Phase 1.3 — Server Settings REST API** | Settings | 🔴 Pending | `npm run test:settings` | - |
@@ -34,5 +34,18 @@ This file is dynamically updated by coding agents to record phase completions an
 
 ## Phase Execution Log
 
-*No phases completed yet. Agent will append entry details upon completing each phase.*
+### Phase 0 — Foundation & Shared Contracts (2026-08-12)
+- **Phase 0.1 (Shared Types & Constants)**:
+  - Built `src/common/types.js` defining `UserRole`, `ServerStatus`, `IncidentStatus`, `IncidentSeverity`, `ResolverType`, `CodeFixStatus`, `WSEventType`.
+  - Implemented custom exception models (`AppError`, `ValidationError`, `UnauthorizedError`, `ForbiddenError`, `NotFoundError`, `ConflictError`, `SSHConnectionError`, `AIDiagnosisError`).
+  - Added helper methods `createWSPayload` and `validateServerVitals`.
+  - Built infrastructure utilities `src/common/config.js`, `src/common/logger.js`, and `src/common/db.js`.
+  - Verified via `npm run test:types` (All assertions passed).
+- **Phase 0.2 (Database Schemas & Models)**:
+  - Created 7 Mongoose document models in `src/models/`: `User.js`, `MonitoredServer.js`, `Incident.js` (with embedded `AIDiagnosisSubSchema` & `CodeFixProposalSubSchema`), `IncidentOccurrence.js`, `ServerVitals.js`, `AppSetting.js`, `AuditLog.js`.
+  - Enforced document validation rules, enums, subdocument embedding, compound indexes, and TTL index.
+  - Initialized and connected to live local MongoDB instance at `mongodb://localhost:27017/fixly`.
+  - Synchronized indexes across all 7 collections and verified live CRUD persistence and clean disconnection via `npm run test:models`.
+
+
 
