@@ -15,7 +15,12 @@ export const api = {
   listIncidents: (token) => request('/api/incidents', { token }),
   resolveIncident: (id, resolutionNotes, token) => request(`/api/incidents/${id}/resolve`, { method: 'PATCH', body: JSON.stringify({ resolutionNotes }), token }),
   getSettings: (token) => request('/api/settings', { token }),
-  updateSettings: (settings, token) => request('/api/settings', { method: 'PUT', body: JSON.stringify(settings), token })
+  updateSettings: (settings, token) => request('/api/settings', { method: 'PUT', body: JSON.stringify(settings), token }),
+  signup: (email, password, fullName) => request('/api/auth/signup', { method: 'POST', body: JSON.stringify({ email, password, fullName }) }),
+  login: (email, password, code) => request('/api/auth/login', { method: 'POST', body: JSON.stringify({ email, password, code }) }),
+  setup2fa: (token) => request('/api/auth/2fa/setup', { method: 'POST', token }),
+  verify2fa: (code, token) => request('/api/auth/2fa/verify', { method: 'POST', body: JSON.stringify({ code }), token }),
+  getMe: (token) => request('/api/auth/me', { token })
 };
 
 export function wsUrl() {

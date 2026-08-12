@@ -8,6 +8,8 @@ import { MonitoredServerModel } from '../models/MonitoredServer.js';
 import { ServerVitalsModel } from '../models/ServerVitals.js';
 import { attachMonitoringWebSocket, monitoringBroadcaster } from '../modules/monitoring/ws_broadcaster.js';
 import { parseJsonBody, routeNotFound, sendError } from './http_utils.js';
+import { handleAuthRoutes } from './routes/auth.js';
+import { authMiddleware } from './middleware/authMiddleware.js';
 import { MonitoringSSHClient } from '../modules/monitoring/ssh_client.js';
 import { readVitalsOnce } from '../modules/monitoring/vitals_reader.js';
 import { parseLogLine } from '../modules/monitoring/log_reader.js';
@@ -30,6 +32,9 @@ export function createServer({ websocket = true } = {}) {
       const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
       const pathname = url.pathname;
       const method = req.method;
+
+      if (pathname.startsWith('/api/auth/')) return handleAuthRoutes(req, res, pathname);
+      if (pathname.startsWith('/api/') && !(await authMiddleware(req, res))) return;
 
       // GET /api/server - Returns real monitored target server details
       if (method === 'GET' && pathname === '/api/server') {

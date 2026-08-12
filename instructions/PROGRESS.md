@@ -110,3 +110,15 @@ This file is dynamically updated by coding agents to record phase completions an
   - Added README instructions for Phase 5 verification.
   - Final required checks: `npm test`, `npm run client:build`, and browser console inspection while running `npm run client:dev` against the backend.
   - All roadmap phases are now marked COMPLETE.
+
+### Custom Enhancements (2026-08-12)
+- **UI Redesign (AI DevOps Command Center)**:
+  - Updated `styles.css` with a premium dark theme (`--bg-app`, `--bg-card`, etc.).
+  - Added pure CSS SVG pipeline visualization to `SignIn.jsx` and `SignUp.jsx`.
+  - Refined custom scrollbar, buttons, and pill badges for a sleeker aesthetic.
+  - Verified via `npm run client:build`.
+- **Backend 2FA Integration**:
+  - Updated `users` table schema to include `two_factor_secret` and `two_factor_enabled`.
+  - Added `/api/auth/2fa/setup` and `/api/auth/2fa/verify` endpoints using `otplib` and `qrcode`.
+  - Updated login workflow to require 2FA token if enabled.
+  - Verified via manual API testing and `npm test`.

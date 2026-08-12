@@ -34,6 +34,8 @@
     "jsonwebtoken": "^9.0.3",
     "mysql2": "^3.23.3",
     "node-ssh": "^13.2.1",
+    "otplib": "^13.4.1",
+    "qrcode": "^1.5.4",
     "simple-git": "^3.27.0",
     "ws": "^8.18.0"
   }

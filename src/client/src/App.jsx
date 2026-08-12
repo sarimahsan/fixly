@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import {
   LayoutDashboard,
   History,
   Settings,
   Server,
-  Activity
+  LogOut,
+  Loader2
 } from 'lucide-react';
 import { AuthProvider, useAuth } from './context/AuthContext.jsx';
 import { api } from './api.js';
@@ -17,9 +19,11 @@ import ResolveModal from './components/dashboard/ResolveModal.jsx';
 import DiffViewer from './components/dashboard/DiffViewer.jsx';
 import HistoryList from './components/dashboard/HistoryList.jsx';
 import SettingsForm from './components/settings/SettingsForm.jsx';
+import SignIn from './pages/SignIn.jsx';
+import SignUp from './pages/SignUp.jsx';
 
 function Dashboard() {
-  const { token, user, switchRole } = useAuth();
+  const { token, user, logout } = useAuth();
   const [incidents, setIncidents] = useState([]);
   const [serverInfo, setServerInfo] = useState(null);
   const [events, setEvents] = useState([]);
@@ -47,6 +51,8 @@ function Dashboard() {
   });
 
   useEffect(() => {
+    if (!token) return;
+
     // Fetch live incidents from database
     api
       .listIncidents(token)
@@ -127,17 +133,15 @@ function Dashboard() {
           </div>
         </div>
 
-        {/* Persona Switcher Widget */}
+        {/* User logout section */}
         <div className="sidebar-persona">
-          <label>Active Persona</label>
-          <select
-            value={user?.role || 'ADMIN'}
-            onChange={(e) => switchRole && switchRole(e.target.value)}
+          <button 
+            className="btn-secondary" 
+            style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+            onClick={logout}
           >
-            <option value="ADMIN">Alex Mercer (ADMIN)</option>
-            <option value="OPERATOR">DevOps Engineer (OPERATOR)</option>
-            <option value="READ_ONLY">Auditor (READ_ONLY)</option>
-          </select>
+            <LogOut size={14} /> Sign out
+          </button>
         </div>
       </aside>
 
@@ -157,9 +161,9 @@ function Dashboard() {
             </div>
 
             <div className="user-badge">
-              <div className="user-avatar">{user?.full_name ? user.full_name.slice(0, 2).toUpperCase() : user?.email ? user.email.slice(0, 2).toUpperCase() : 'U'}</div>
+              <div className="user-avatar">{user?.fullName ? user.fullName.slice(0, 2).toUpperCase() : user?.email ? user.email.slice(0, 2).toUpperCase() : 'U'}</div>
               <div className="user-info">
-                <span className="user-name">{user?.email || 'Authenticated User'}</span>
+                <span className="user-name">{user?.fullName || user?.email || 'Authenticated User'}</span>
                 <span className="user-role">{user?.role || 'OPERATOR'}</span>
               </div>
             </div>
@@ -208,10 +212,41 @@ function Dashboard() {
   );
 }
 
+function ProtectedRoute({ children }) {
+  const { user, loading } = useAuth();
+  
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', height: '100vh', width: '100vw', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--bg-main)' }}>
+        <Loader2 className="spinner" size={48} color="var(--primary-light)" />
+      </div>
+    );
+  }
+  
+  if (!user) {
+    return <Navigate to="/signin" replace />;
+  }
+  
+  return children;
+}
+
 export default function App() {
   return (
     <AuthProvider>
-      <Dashboard />
+      <Router>
+        <Routes>
+          <Route path="/signin" element={<SignIn />} />
+          <Route path="/signup" element={<SignUp />} />
+          <Route 
+            path="/*" 
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            } 
+          />
+        </Routes>
+      </Router>
     </AuthProvider>
   );
 }

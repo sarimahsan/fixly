@@ -1,5 +1,7 @@
 import crypto from 'node:crypto';
 import { promisify } from 'node:util';
+import { authenticator } from 'otplib';
+import QRCode from 'qrcode';
 import { User } from '../../models/User.js';
 import config from '../../common/config.js';
 import { UnauthorizedError, ValidationError } from '../../common/types.js';
@@ -119,15 +121,29 @@ export function createSession(user) {
   };
 }
 
-export async function authenticateLogin({ email, password }) {
+export async function authenticateLogin({ email, password, code }) {
   const normalizedEmail = String(email || '').trim().toLowerCase();
   if (!normalizedEmail || !password) throw new UnauthorizedError('Invalid email or password');
 
-  const user = await User.findOne({ email: normalizedEmail });
-  if (!user || !(await verifyPassword(password, user.passwordHash))) {
+  const user = await User.findOne ? await User.findOne({ email: normalizedEmail }) : await import('../../models/User.js').then(m => m.UserModel.findByEmail(normalizedEmail));
+  
+  if (!user || !(await verifyPassword(password, user.password_hash || user.passwordHash))) {
     throw new UnauthorizedError('Invalid email or password');
   }
-  return createSession(user);
+
+  // Handle 2FA
+  const fullUser = await import('../../models/User.js').then(m => m.UserModel.findById(user.id));
+  if (fullUser.twoFactorEnabled) {
+    if (!code) {
+      return { requires2FA: true, email: normalizedEmail };
+    }
+    const isValid = authenticator.verify({ token: code, secret: fullUser.twoFactorSecret });
+    if (!isValid) {
+      throw new UnauthorizedError('Invalid two-factor authentication code');
+    }
+  }
+
+  return createSession(fullUser);
 }
 
 export function requireAuthenticated(req, _res, next) {
@@ -151,8 +167,46 @@ export async function loginHandler(req, res, next) {
   }
 }
 
+export async function setup2FAHandler(req, res, next) {
+  try {
+    const user = await import('../../models/User.js').then(m => m.UserModel.findById(req.user.id || req.user.sub));
+    if (!user) throw new UnauthorizedError('User not found');
+    
+    const secret = authenticator.generateSecret();
+    const otpauth = authenticator.keyuri(user.email, 'Fixly', secret);
+    const qrCode = await QRCode.toDataURL(otpauth);
+    
+    // Save secret temporarily (in production this should be cached, here we just save to DB but keep it disabled)
+    await import('../../models/User.js').then(m => m.UserModel.update(user.id, { twoFactorSecret: secret, twoFactorEnabled: false }));
+    
+    res.json({ secret, qrCode });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function verify2FAHandler(req, res, next) {
+  try {
+    const { code } = req.body;
+    if (!code) throw new ValidationError('Verification code is required');
+    
+    const user = await import('../../models/User.js').then(m => m.UserModel.findById(req.user.id || req.user.sub));
+    if (!user || !user.twoFactorSecret) throw new ValidationError('2FA setup not initiated');
+    
+    const isValid = authenticator.verify({ token: code, secret: user.twoFactorSecret });
+    if (!isValid) throw new UnauthorizedError('Invalid verification code');
+    
+    await import('../../models/User.js').then(m => m.UserModel.update(user.id, { twoFactorEnabled: true }));
+    res.json({ success: true });
+  } catch (err) {
+    next(err);
+  }
+}
+
 export function registerAuthRoutes(app) {
   app.post('/api/auth/login', loginHandler);
+  app.post('/api/auth/2fa/setup', requireAuthenticated, setup2FAHandler);
+  app.post('/api/auth/2fa/verify', requireAuthenticated, verify2FAHandler);
   return app;
 }
 
