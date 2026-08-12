@@ -19,7 +19,10 @@
     "test:recovery": "node tests/ai_git.test.js",
     "test:ai-git": "node tests/ai_git.test.js",
     "db:check": "node scripts/check_db.js",
-    "test": "npm run test:types && npm run test:models && npm run test:auth && npm run test:rbac && npm run test:settings && npm run test:monitoring && npm run test:ai-git"
+    "test": "npm run test:types && npm run test:models && npm run test:auth && npm run test:rbac && npm run test:settings && npm run test:monitoring && npm run test:ai-git",
+    "client:install": "npm install --prefix src/client",
+    "client:dev": "npm run dev --prefix src/client",
+    "client:build": "npm run build --prefix src/client"
   },
   "dependencies": {
     "dotenv": "^16.4.5",

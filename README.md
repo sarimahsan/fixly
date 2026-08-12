@@ -55,6 +55,15 @@ Implemented modules:
 - `src/modules/git/recovery.js`
   - Recovery-window verifier and monitor that emits `incident:resolved` after matching errors cease.
 
+## Phase 4: React Dashboard
+
+Implemented `src/client/` React + Vite dashboard with:
+
+- Live WebSocket integration on `/ws` for incident, diagnosis, fix proposal, resolution, and vitals events.
+- `LiveFeed.jsx` and `ServerVitalsWidget.jsx` for real-time operations visibility.
+- `IssuesBoard.jsx`, `ResolveModal.jsx`, `HistoryList.jsx`, and `DiffViewer.jsx` for tracked issue lifecycle, manual resolution, and unified diff review.
+- `SettingsForm.jsx` with masked token handling and admin-only write controls through `AuthContext` / `AdminOnly` RBAC guards.
+
 ## Configuration
 
 Copy `.env.example` to `.env` and set at minimum:
@@ -83,6 +92,9 @@ npm run test:rbac
 npm run test:settings
 npm run test:monitoring
 npm run test:ai-git
+npm run client:install
+npm run client:build
+npm run client:dev
 npm test
 ```
 

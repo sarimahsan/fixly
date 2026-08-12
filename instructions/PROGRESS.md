@@ -23,10 +23,10 @@ This file is dynamically updated by coding agents to record phase completions an
 | **Phase 3.3 — Line-by-Line Diff Generator** | AI Logic | 🟢 DONE | `npm run test:diff` | 2026-08-12 |
 | **Phase 3.4 — Git PR Automation** | Git Integration | 🟢 DONE | `npm run test:git` | 2026-08-12 |
 | **Phase 3.5 — Auto-Recovery Verification** | Git Integration | 🟢 DONE | `npm run test:recovery` | 2026-08-12 |
-| **Phase 4.1 — Live Feed & Vitals Dashboard** | Frontend UI | 🔴 Pending | UI Verification | - |
-| **Phase 4.2 — Tracked Issues Board** | Frontend UI | 🔴 Pending | UI Verification | - |
-| **Phase 4.3 — History & Diff Viewer Modal** | Frontend UI | 🔴 Pending | UI Verification | - |
-| **Phase 4.4 — Masked Settings & Access Control** | Frontend UI | 🔴 Pending | UI Verification | - |
+| **Phase 4.1 — Live Feed & Vitals Dashboard** | Frontend UI | 🟢 DONE | `npm run client:build` | 2026-08-12 |
+| **Phase 4.2 — Tracked Issues Board** | Frontend UI | 🟢 DONE | `npm run client:build` | 2026-08-12 |
+| **Phase 4.3 — History & Diff Viewer Modal** | Frontend UI | 🟢 DONE | `npm run client:build` | 2026-08-12 |
+| **Phase 4.4 — Masked Settings & Access Control** | Frontend UI | 🟢 DONE | `npm run client:build` | 2026-08-12 |
 | **Phase 5.1 — End-to-End System Test** | Integration | 🔴 Pending | Full scenario script | - |
 | **Phase 5.2 — Final Walkthrough** | Integration | 🔴 Pending | Full system rehearsal | - |
 
@@ -84,3 +84,16 @@ This file is dynamically updated by coding agents to record phase completions an
 - **Phase 3.5 (Auto-Recovery Verification)**:
   - Added `src/modules/git/recovery.js` with recovery-window matching, automatic AI resolution updates, `incident:resolved` broadcasts, and an event-driven `RecoveryMonitor`.
   - Verified via `npm run test:recovery`.
+
+
+### Phase 4 — Frontend UI & User Experience (2026-08-12)
+- **Phase 4.1 (Live Feed & Vitals Dashboard)**:
+  - Added Vite React app under `src/client/` with `LiveFeed.jsx`, `ServerVitalsWidget.jsx`, and `useFixlySocket` consuming `/ws` events.
+- **Phase 4.2 (Tracked Issues Board & Manual Resolution)**:
+  - Added `IssuesBoard.jsx` grouped by `OPEN`, `IN_PROGRESS`, and `RESOLVED`, plus `ResolveModal.jsx` for human resolution through `PATCH /api/incidents/:id/resolve` with optimistic UI updates.
+- **Phase 4.3 (History & Code Diff Viewer)**:
+  - Added `HistoryList.jsx` and `DiffViewer.jsx` for resolved incident audit trail display and unified patch rendering.
+- **Phase 4.4 (Masked Settings & Access Control)**:
+  - Added `SettingsForm.jsx`, `AuthContext`, and `AdminOnly` RBAC guard. Non-admin users can view masked settings but cannot save settings or resolve issues.
+  - Added root npm scripts for client install/build/dev and documented dashboard usage in README.
+  - Intended verification: `npm run client:install && npm run client:build`.
