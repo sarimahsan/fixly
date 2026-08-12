@@ -96,6 +96,27 @@ npm run client:install
 npm run client:build
 npm run client:dev
 npm test
+npm run verify:phase5
 ```
 
 `npm run test:models` attempts a live MongoDB connection and may skip/fail that portion if MongoDB is unavailable.
+
+## Phase 5 Verification
+
+Run the end-to-end verification harness after installing dependencies:
+
+```bash
+npm run verify:phase5
+npm test
+npm run client:build
+```
+
+`verify:phase5` exercises the complete operational chain with deterministic local doubles for external services: log detection, SHA-256 deduplication, AI diagnosis, code-fix proposal, injected Git commit automation, WebSocket feed emission, and auto-recovery.
+
+For a live SSH prerequisite check, configure `SSH_HOST`, `SSH_USER`, `SSH_KEY_PATH`, and related values in `.env`, then run:
+
+```bash
+PHASE5_REAL_SSH=1 npm run verify:phase5
+```
+
+That mode validates real SSH connectivity, remote command execution, log-line parsing from command output, and vitals collection against the monitored host, then runs the full deterministic harness for AI/Git/UI/recovery behavior in the same command.
