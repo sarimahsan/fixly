@@ -5,6 +5,7 @@ import { connectDB } from '../common/db.js';
 import { loginHandler, requireAuthenticated } from '../modules/auth/auth_service.js';
 import { requireAdmin, requireViewer } from '../modules/auth/rbac_middleware.js';
 import { getSettingsHandler, putSettingsHandler } from '../modules/auth/settings_service.js';
+import { attachMonitoringWebSocket } from '../modules/monitoring/ws_broadcaster.js';
 import { parseJsonBody, routeNotFound, runHandlers, sendError } from './http_utils.js';
 
 const routes = new Map([
@@ -13,8 +14,8 @@ const routes = new Map([
   ['PUT /api/settings', [requireAuthenticated, requireAdmin, putSettingsHandler]]
 ]);
 
-export function createServer() {
-  return http.createServer(async (req, res) => {
+export function createServer({ websocket = true } = {}) {
+  const server = http.createServer(async (req, res) => {
     try {
       const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
       const key = `${req.method} ${url.pathname}`;
@@ -28,6 +29,9 @@ export function createServer() {
       return sendError(res, error);
     }
   });
+
+  if (websocket) attachMonitoringWebSocket(server);
+  return server;
 }
 
 export async function startServer() {

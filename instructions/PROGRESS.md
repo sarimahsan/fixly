@@ -13,11 +13,11 @@ This file is dynamically updated by coding agents to record phase completions an
 | **Phase 1.1 — Authentication & JWT Session** | Auth & Roles | 🟢 DONE | `npm run test:auth` | 2026-08-12 |
 | **Phase 1.2 — Role-Based Access Control (RBAC)** | Auth & Roles | 🟢 DONE | `npm run test:rbac` | 2026-08-12 |
 | **Phase 1.3 — Server Settings REST API** | Settings | 🟢 DONE | `npm run test:settings` | 2026-08-12 |
-| **Phase 2.1 — SSH Connection Client** | Monitoring | 🔴 Pending | `npm run test:ssh` | - |
-| **Phase 2.2 — Log Stream Parser** | Monitoring | 🔴 Pending | `npm run test:logs` | - |
-| **Phase 2.3 — Server Vitals Monitor** | Monitoring | 🔴 Pending | `npm run test:vitals` | - |
-| **Phase 2.4 — SHA-256 Deduplication** | Monitoring | 🔴 Pending | `npm run test:dedup` | - |
-| **Phase 2.5 — Real-Time WebSocket Streaming** | Monitoring | 🔴 Pending | `npm run test:ws` | - |
+| **Phase 2.1 — SSH Connection Client** | Monitoring | 🟢 DONE | `npm run test:monitoring` | 2026-08-12 |
+| **Phase 2.2 — Log Stream Parser** | Monitoring | 🟢 DONE | `npm run test:monitoring` | 2026-08-12 |
+| **Phase 2.3 — Server Vitals Monitor** | Monitoring | 🟢 DONE | `npm run test:monitoring` | 2026-08-12 |
+| **Phase 2.4 — SHA-256 Deduplication** | Monitoring | 🟢 DONE | `npm run test:monitoring` | 2026-08-12 |
+| **Phase 2.5 — Real-Time WebSocket Streaming** | Monitoring | 🟢 DONE | `npm run test:monitoring` | 2026-08-12 |
 | **Phase 3.1 — AI Diagnosis Engine** | AI Logic | 🔴 Pending | `npm run test:ai:diag` | - |
 | **Phase 3.2 — AI Code-Fix Generator** | AI Logic | 🔴 Pending | `npm run test:ai:fix` | - |
 | **Phase 3.3 — Line-by-Line Diff Generator** | AI Logic | 🔴 Pending | `npm run test:diff` | - |

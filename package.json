@@ -11,12 +11,15 @@
     "test:auth": "node tests/auth.test.js",
     "test:rbac": "node tests/rbac.test.js",
     "test:settings": "node tests/settings.test.js",
+    "test:monitoring": "node tests/monitoring.test.js",
     "db:check": "node scripts/check_db.js",
-    "test": "npm run test:types && npm run test:models && npm run test:auth && npm run test:rbac && npm run test:settings"
+    "test": "npm run test:types && npm run test:models && npm run test:auth && npm run test:rbac && npm run test:settings && npm run test:monitoring"
   },
   "dependencies": {
     "dotenv": "^16.4.5",
-    "mongoose": "^8.2.0"
+    "mongoose": "^8.2.0",
+    "node-ssh": "^13.2.1",
+    "ws": "^8.18.0"
   },
   "devDependencies": {}
 }
