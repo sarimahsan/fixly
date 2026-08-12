@@ -10,9 +10,9 @@ This file is dynamically updated by coding agents to record phase completions an
 | :--- | :--- | :--- | :--- | :--- |
 | **Phase 0.1 — Shared Types & Constants** | Foundation | 🟢 DONE | `npm run test:types` | 2026-08-12 |
 | **Phase 0.2 — Database Schemas & Models** | Foundation | 🟢 DONE | `npm run test:models` | 2026-08-12 |
-| **Phase 1.1 — Authentication & JWT Session** | Auth & Roles | 🔴 Pending | `npm run test:auth` | - |
-| **Phase 1.2 — Role-Based Access Control (RBAC)** | Auth & Roles | 🔴 Pending | `npm run test:rbac` | - |
-| **Phase 1.3 — Server Settings REST API** | Settings | 🔴 Pending | `npm run test:settings` | - |
+| **Phase 1.1 — Authentication & JWT Session** | Auth & Roles | 🟢 DONE | `npm run test:auth` | 2026-08-12 |
+| **Phase 1.2 — Role-Based Access Control (RBAC)** | Auth & Roles | 🟢 DONE | `npm run test:rbac` | 2026-08-12 |
+| **Phase 1.3 — Server Settings REST API** | Settings | 🟢 DONE | `npm run test:settings` | 2026-08-12 |
 | **Phase 2.1 — SSH Connection Client** | Monitoring | 🔴 Pending | `npm run test:ssh` | - |
 | **Phase 2.2 — Log Stream Parser** | Monitoring | 🔴 Pending | `npm run test:logs` | - |
 | **Phase 2.3 — Server Vitals Monitor** | Monitoring | 🔴 Pending | `npm run test:vitals` | - |
@@ -48,4 +48,20 @@ This file is dynamically updated by coding agents to record phase completions an
   - Synchronized indexes across all 7 collections and verified live CRUD persistence and clean disconnection via `npm run test:models`.
 
 
+
+
+### Phase 1 — Authentication, Roles & Settings API (2026-08-12)
+- **Phase 1.1 (Authentication & JWT Session)**:
+  - Added `src/modules/auth/auth_service.js` with PBKDF2-SHA512 password hashing, timing-safe password verification, HS256 JWT creation/verification, bearer auth middleware, and `/api/auth/login` route registration helper.
+  - Session responses follow the contract `{ token, user: { id, email, role } }`.
+  - Verified via `npm run test:auth`.
+- **Phase 1.2 (Role-Based Access Control)**:
+  - Added `src/modules/auth/rbac_middleware.js` with admin and viewer access tiers.
+  - Mapped admin access to `UserRole.ADMIN`; mapped viewer access to existing `ADMIN`, `OPERATOR`, and `READ_ONLY` roles per project decisions.
+  - Verified via `npm run test:rbac`.
+- **Phase 1.3 (Server & Repository Settings API)**:
+  - Added `src/modules/auth/settings_service.js` with GET/PUT `/api/settings` route registration helpers.
+  - Added `src/modules/auth/crypto_utils.js` using AES-256-GCM encrypted setting storage and masked GitHub token output.
+  - Added `SETTINGS_ENCRYPTION_KEY` configuration and `.env.example` documentation.
+  - Verified via `npm run test:settings`.
 

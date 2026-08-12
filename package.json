@@ -8,8 +8,11 @@
     "start": "node src/server/server.js",
     "test:types": "node tests/types.test.js",
     "test:models": "node tests/models.test.js",
+    "test:auth": "node tests/auth.test.js",
+    "test:rbac": "node tests/rbac.test.js",
+    "test:settings": "node tests/settings.test.js",
     "db:check": "node scripts/check_db.js",
-    "test": "npm run test:types && npm run test:models"
+    "test": "npm run test:types && npm run test:models && npm run test:auth && npm run test:rbac && npm run test:settings"
   },
   "dependencies": {
     "dotenv": "^16.4.5",
