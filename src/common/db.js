@@ -63,6 +63,27 @@ export async function initDatabase() {
       logger.warn(`SQL init file not found at ${sqlPath}. Skipping SQL script execution.`);
     }
 
+    // Step 4: Auto-migrate existing tables if missing new columns
+    try {
+      const [cols] = await dbPool.query("SHOW COLUMNS FROM `users` LIKE 'two_factor_secret';");
+      if (cols.length === 0) {
+        await dbPool.query("ALTER TABLE `users` ADD COLUMN `two_factor_secret` VARCHAR(255) NULL AFTER `api_token`;");
+        logger.info("Auto-migration: Added 'two_factor_secret' column to `users` table.");
+      }
+    } catch (migErr) {
+      logger.warn(`Auto-migration check (two_factor_secret): ${migErr.message}`);
+    }
+
+    try {
+      const [cols] = await dbPool.query("SHOW COLUMNS FROM `users` LIKE 'two_factor_enabled';");
+      if (cols.length === 0) {
+        await dbPool.query("ALTER TABLE `users` ADD COLUMN `two_factor_enabled` BOOLEAN NOT NULL DEFAULT FALSE AFTER `two_factor_secret`;");
+        logger.info("Auto-migration: Added 'two_factor_enabled' column to `users` table.");
+      }
+    } catch (migErr) {
+      logger.warn(`Auto-migration check (two_factor_enabled): ${migErr.message}`);
+    }
+
     return true;
   } catch (err) {
     logger.error('Failed to initialize MySQL Database:', err.message);
