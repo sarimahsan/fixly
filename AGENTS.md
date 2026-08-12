@@ -10,11 +10,11 @@
 1. **Sequential Module Execution**:
    - Work through the project phases linearly as outlined in `instructions/map.md`:
      - **Phase 0 (Shared Foundation)**: Types (`src/common/types.js`) and Mongoose models (`src/models/`).
-     - **Phase 1 (Target Environment & Auth)**: Error simulator (`target_environment/`), Auth (`src/modules/auth/`), Settings API.
+     - **Phase 1 (Auth & Settings API)**: Password hashing & JWT Auth (`src/modules/auth/`), RBAC middleware, Settings API (`GET`/`PUT /api/settings`).
      - **Phase 2 (Monitoring & Transport)**: SSH client, vitals, log parser, deduplication (`src/modules/monitoring/`).
      - **Phase 3 (AI Logic & Git)**: AI diagnosis, patch generator, Git automation (`src/modules/ai/`, `src/modules/git/`).
      - **Phase 4 (UI & UX Dashboard)**: Frontend React app (`src/client/`).
-     - **Phase 5 (End-to-End Verification)**: Integration testing and walkthrough.
+     - **Phase 5 (End-to-End Verification)**: Integration testing against the remote monitored server.
 2. **Git Branching Strategy**:
    - All commits are made directly to the `main` branch.
    - Commit incrementally at the completion of each sub-phase.

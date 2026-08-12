@@ -14,7 +14,7 @@ fixly/
 │       ├── monitoring.md
 │       ├── ai_git.md
 │       ├── interface.md
-│       └── auth_env.md
+│       └── auth_settings.md
 ├── instructions/                 # Core specification & contracts
 │   ├── map.md                    # Master sequential roadmap
 │   ├── schema.md                 # MongoDB Mongoose database schema specification
@@ -53,10 +53,10 @@ fixly/
 │   │   ├── git/                  # Version Control Integration (Phase 3)
 │   │   │   ├── git_client.js     # Phase 3.4: simple-git repository connection & PR creator
 │   │   │   └── recovery.js       # Phase 3.5: Auto-resolution monitor
-│   │   └── auth/                 # Role-Based Access, Auth & Settings API (Phase 1.2)
-│   │       ├── auth_service.js   # Phase 1.2: Password hashing & JWT issue
+│   │   └── auth/                 # Role-Based Access, Auth & Settings API (Phase 1)
+│   │       ├── auth_service.js   # Phase 1.1: Password hashing & JWT issue
 │   │       ├── rbac_middleware.js# Phase 1.2: Role validation middleware
-│   │       └── settings_service.js# Phase 1.2: Backend settings GET/PUT & encryption
+│   │       └── settings_service.js# Phase 1.3: Backend settings GET/PUT & encryption
 │   └── client/                   # Frontend React + Vite + Tailwind CSS Dashboard (Phase 4)
 │       ├── index.html
 │       ├── vite.config.js
@@ -91,13 +91,6 @@ fixly/
 │       │       ├── useIncidents.js
 │       │       ├── useVitals.js
 │       │       └── useAuth.js
-│       └── target_environment/   # Demo App & Triggerable Error Harness (Phase 1.1)
-│           ├── app/              # Target server application being monitored
-│           │   ├── server.js
-│           │   ├── faulty_routes.js # Bugs mapped for AI code fixes
-│           │   └── logs/
-│           │       └── app.log
-│           └── trigger_panel/    # Button panel to invoke error scenarios
 │               └── trigger_errors.sh
 ```
 

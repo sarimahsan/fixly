@@ -25,17 +25,16 @@ We are building **Fixly**, an AI-powered incident detection and self-healing sys
 
 ---
 
-## Phase 1 — Target Environment & Access Control
+## Phase 1 — Authentication, Roles & Settings API
 
-### Phase 1.1 — Target Application & Error Harness
-- Set up `target_environment/` with a dummy application and trigger panel.
-- Implement reproducible error scenarios (e.g. database timeout, syntax/reference error, unhandled promise).
-- Ensure at least 2 error types map to real, fixable source files.
+### Phase 1.1 — Authentication & Session Management
+- Build backend authentication (`src/modules/auth/auth_service.js`) with password hashing and JWT sessions.
 
-### Phase 1.2 — Authentication & Roles
-- Build backend authentication (`src/modules/auth/`) with password hashing and JWT sessions.
-- Implement Role-Based Access Control (RBAC middleware) with `admin` and `viewer` roles.
-- Implement Backend Settings API (`GET /api/settings`, `PUT /api/settings`) with token encryption.
+### Phase 1.2 — Role-Based Access Control (RBAC)
+- Implement RBAC middleware (`src/modules/auth/rbac_middleware.js`) with `admin` and `viewer` roles.
+
+### Phase 1.3 — Server & Repository Settings API
+- Implement Backend Settings API (`GET /api/settings`, `PUT /api/settings`) in `src/modules/auth/settings_service.js` with encrypted token storage.
 
 ---
 
@@ -99,7 +98,7 @@ We are building **Fixly**, an AI-powered incident detection and self-healing sys
 ## Phase 5 — Integration & Final Verification
 
 ### Phase 5.1 — End-to-End System Test
-- Trigger each error scenario from `target_environment/` and verify complete flow: Log Detection → Fingerprint Dedup → AI Diagnosis → Git Patch → Live UI Update → Auto-Recovery.
+- Trigger error scenarios on remote monitored server over SSH and verify complete flow: Log Detection → Fingerprint Dedup → AI Diagnosis → Git Patch → Live UI Update → Auto-Recovery.
 
 ### Phase 5.2 — Final Rehearsal & Documentation Walkthrough
 - Confirm zero console errors, clean test suite execution, and verify all documentation.

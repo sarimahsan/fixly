@@ -10,8 +10,9 @@ This file is dynamically updated by coding agents to record phase completions an
 | :--- | :--- | :--- | :--- | :--- |
 | **Phase 0.1 — Shared Types & Constants** | Foundation | 🔴 Pending | `npm run test:types` | - |
 | **Phase 0.2 — Database Schemas & Models** | Foundation | 🔴 Pending | `npm run test:models` | - |
-| **Phase 1.1 — Target Environment Harness** | Target Env | 🔴 Pending | `npm run demo:target` | - |
-| **Phase 1.2 — Authentication & RBAC API** | Auth & Settings | 🔴 Pending | `npm run test:auth` | - |
+| **Phase 1.1 — Authentication & JWT Session** | Auth & Roles | 🔴 Pending | `npm run test:auth` | - |
+| **Phase 1.2 — Role-Based Access Control (RBAC)** | Auth & Roles | 🔴 Pending | `npm run test:rbac` | - |
+| **Phase 1.3 — Server Settings REST API** | Settings | 🔴 Pending | `npm run test:settings` | - |
 | **Phase 2.1 — SSH Connection Client** | Monitoring | 🔴 Pending | `npm run test:ssh` | - |
 | **Phase 2.2 — Log Stream Parser** | Monitoring | 🔴 Pending | `npm run test:logs` | - |
 | **Phase 2.3 — Server Vitals Monitor** | Monitoring | 🔴 Pending | `npm run test:vitals` | - |
