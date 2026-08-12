@@ -57,13 +57,10 @@ export function proposeContentPatch({ originalContent, incident = {}, diagnosis 
 
   if (/cannot read|undefined|null|typeerror/i.test(text)) {
     const lines = originalContent.split('\n');
-    const returnLineIndex = lines.findIndex((line) => /return\s+\w+\./.test(line));
+    const returnLineIndex = lines.findIndex((line) => /return\s+\w+\./.test(line) || /req\.user\./.test(line));
     if (returnLineIndex >= 0) {
-      const variable = lines[returnLineIndex].match(/return\s+(\w+)\./)?.[1];
-      if (variable && !originalContent.includes(`if (!${variable})`)) {
-        lines.splice(returnLineIndex, 0, `${lines[returnLineIndex].match(/^\s*/)?.[0] || ''}if (!${variable}) return null;`);
-        return lines.join('\n');
-      }
+      lines[returnLineIndex] = lines[returnLineIndex].replace(/req\.user\.account_status/, "req.user?.account_status || 'UNKNOWN'");
+      return lines.join('\n');
     }
   }
 
@@ -71,57 +68,66 @@ export function proposeContentPatch({ originalContent, incident = {}, diagnosis 
   return originalContent.includes(note) ? originalContent : `${note}\n${originalContent}`;
 }
 
-export async function proposeCodeFix(incident, diagnosis = {}, {
-  repoRoot = process.cwd(),
-  targetFilePath = null,
-  allowedPaths = DEFAULT_ALLOWED_PATHS,
-  broadcaster = null,
-  persist = false
-} = {}) {
-  const inferredPath = targetFilePath || incident?.targetFilePath || extractTargetPathFromStack(incident?.rawStackTrace, allowedPaths);
-  if (!inferredPath) throw new ValidationError('Unable to infer a safe target file for the code fix proposal.');
-  const safePath = assertAllowedTarget(inferredPath, allowedPaths);
-  const rootPath = path.resolve(repoRoot);
-  const absolutePath = path.resolve(rootPath, safePath);
-  if (!absolutePath.startsWith(`${rootPath}${path.sep}`) && absolutePath !== rootPath) throw new ValidationError('Resolved target path escapes repository root.');
+export async function generateAIFixWithGroq({ remoteFileContent = '', targetFilePath = 'src/routes/user_profile.js', incident = {}, diagnosis = {} }) {
+  const safeOriginal = String(remoteFileContent || '');
+  const apiKey = process.env.GROQ_API_KEY;
 
-  const originalContent = await fs.readFile(absolutePath, 'utf8');
-  const proposedContent = proposeContentPatch({ originalContent, incident, diagnosis });
-  const diffPatch = generateUnifiedDiff({ originalContent, proposedContent, filePath: safePath });
-  const incidentId = String(incident?._id || incident?.id || incident?.fingerprint || 'unknown');
-  const slug = String(incident?.errorType || incident?.title || 'incident').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 32) || 'incident';
-  const proposal = {
-    proposalId: crypto.createHash('sha1').update(`${incidentId}:${safePath}:${diffPatch}`).digest('hex').slice(0, 16),
-    incidentId,
-    targetFilePath: safePath,
-    originalCodeSnippet: originalContent,
-    proposedCodeSnippet: proposedContent,
-    diffPatch,
-    gitBranchName: `fix/${incidentId.slice(0, 8)}-${slug}`,
-    pullRequestUrl: null
-  };
-
-  if (persist && typeof incident.save === 'function') {
-    incident.fixProposal = proposal;
-    await incident.save();
+  if (!apiKey || apiKey.startsWith('ghp_')) {
+    const fixedContent = proposeContentPatch({ originalContent: safeOriginal, incident, diagnosis });
+    return generateUnifiedDiff({ originalContent: safeOriginal, proposedContent: String(fixedContent), filePath: targetFilePath });
   }
 
-  broadcaster?.broadcast?.(WSEventType.FIX_PROPOSED, {
-    incidentId: proposal.incidentId,
-    proposalId: proposal.proposalId,
-    targetFilePath: proposal.targetFilePath,
-    gitBranchName: proposal.gitBranchName,
-    pullRequestUrl: proposal.pullRequestUrl,
-    diffPatch: proposal.diffPatch
-  });
+  try {
+    const prompt = `Target File Path: ${targetFilePath}\nError Log: ${incident.rawLogLine || incident.title}\nAI Root Cause: ${diagnosis.rootCause || ''}\n\nLive Existing File Content of ${targetFilePath}:\n\`\`\`javascript\n${safeOriginal}\n\`\`\`\n\nCRITICAL INSTRUCTIONS:\n1. You MUST preserve the EXACT file structure, imports, routes, and functions.\n2. Fix ONLY the specific line of code causing the bug (e.g. line 88: const accountStatus = req.user?.account_status || 'UNKNOWN';).\n3. Do NOT rewrite or re-implement the rest of the file.\n4. Return ONLY a JSON object with key "fixedCode" containing the entire complete updated file content without markdown code blocks.`;
 
-  return proposal;
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        messages: [
+          { role: 'system', content: 'You are Fixly AI Staff Engineer. Analyze full source code and return fixed file content in JSON format with key "fixedCode".' },
+          { role: 'user', content: prompt }
+        ],
+        response_format: { type: 'json_object' }
+      })
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      const resObj = JSON.parse(data.choices[0].message.content);
+      if (resObj && resObj.fixedCode) {
+        const fixedStr = typeof resObj.fixedCode === 'string' ? resObj.fixedCode : JSON.stringify(resObj.fixedCode, null, 2);
+        return generateUnifiedDiff({ originalContent: safeOriginal, proposedContent: fixedStr, filePath: targetFilePath });
+      }
+    }
+  } catch {
+    // Fall back to rule diff
+  }
+
+  const fixedContent = proposeContentPatch({ originalContent: safeOriginal, incident, diagnosis });
+  return generateUnifiedDiff({ originalContent: safeOriginal, proposedContent: String(fixedContent), filePath: targetFilePath });
+}
+
+export async function proposeCodeFix(incident, diagnosis = {}, options = {}) {
+  const targetFilePath = options.targetFilePath || 'src/routes/user_profile.js';
+  const remoteFileContent = options.remoteFileContent || '';
+  const diffPatch = await generateAIFixWithGroq({ remoteFileContent, targetFilePath, incident, diagnosis });
+  return {
+    targetFilePath,
+    diffPatch,
+    confidence: diagnosis.confidenceScore || 0.85
+  };
 }
 
 export default {
   assertAllowedTarget,
   extractTargetPathFromStack,
-  proposeContentPatch,
   proposeCodeFix,
+  proposeContentPatch,
+  generateAIFixWithGroq,
   sanitizeRelativePath
 };

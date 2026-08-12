@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import { getPool } from '../common/db.js';
 
 export const IncidentModel = {
@@ -49,14 +50,28 @@ export const IncidentModel = {
     };
   },
 
-  async create({ id, fingerprint, title, errorType, normalizedMessage, rawStackTrace, severity = 'MEDIUM', targetFile = null }) {
+  async create({ id, fingerprint, title, errorType, normalizedMessage, rawStackTrace, severity = 'MEDIUM', targetFile = null, aiDiagnosis = null, codeFixProposal = null }) {
     const pool = getPool();
+    const incId = id || `inc-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    const fp = fingerprint || crypto.createHash('md5').update(`${normalizedMessage || title}:${Date.now()}:${Math.random()}`).digest('hex');
+
     await pool.query(
-      `INSERT INTO incidents (id, fingerprint, title, error_type, normalized_message, raw_stack_trace, severity, target_file, status, occurrence_count)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'OPEN', 1)`,
-      [id, fingerprint, title, errorType, normalizedMessage, rawStackTrace, severity, targetFile]
+      `INSERT INTO incidents (id, fingerprint, title, error_type, normalized_message, raw_stack_trace, severity, target_file, status, occurrence_count, ai_diagnosis, code_fix_proposal)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'OPEN', 1, ?, ?)`,
+      [
+        incId,
+        fp,
+        title,
+        errorType || 'Error',
+        normalizedMessage || title,
+        rawStackTrace || null,
+        severity,
+        targetFile,
+        aiDiagnosis ? JSON.stringify(aiDiagnosis) : null,
+        codeFixProposal ? JSON.stringify(codeFixProposal) : null
+      ]
     );
-    return this.getById(id);
+    return this.getById(incId);
   },
 
   async incrementOccurrence(id) {
@@ -89,10 +104,8 @@ export const IncidentModel = {
   async resolve(id, { resolvedByType = 'HUMAN', resolvedByUserId = null, resolutionNotes = '' }) {
     const pool = getPool();
     await pool.query(
-      `UPDATE incidents 
-       SET status = 'RESOLVED', resolved_at = NOW(), resolved_by_type = ?, resolved_by_user_id = ?, resolution_notes = ? 
-       WHERE id = ?`,
-      [resolvedByType, resolvedByUserId, resolutionNotes, id]
+      'UPDATE incidents SET status = "RESOLVED", resolved_at = NOW(), resolved_by_type = ?, resolution_notes = ? WHERE id = ?',
+      [resolvedByType, resolutionNotes, id]
     );
     return this.getById(id);
   }

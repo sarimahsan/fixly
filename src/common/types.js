@@ -53,7 +53,8 @@ export const WSEventType = Object.freeze({
   VITALS_UPDATED: 'vitals:updated',
   DIAGNOSIS_CREATED: 'diagnosis:created',
   FIX_PROPOSED: 'fix:proposed',
-  INCIDENT_RESOLVED: 'incident:resolved'
+  INCIDENT_RESOLVED: 'incident:resolved',
+  LOG_ERROR: 'log:error'
 });
 
 /**

@@ -17,19 +17,30 @@ export function buildSSHConfig(server = {}) {
   const host = server.host || config.ssh.host;
   const username = server.sshUser || server.username || server.user || config.ssh.user;
   const port = Number(server.port || config.ssh.port || 22);
+  const password = server.password || config.ssh.password;
   const privateKeyPath = expandHome(server.sshKeyPath || server.privateKeyPath || config.ssh.keyPath);
 
   if (!host) throw new ValidationError('SSH host is required');
   if (!username) throw new ValidationError('SSH username is required');
-  if (!privateKeyPath) throw new ValidationError('SSH private key path is required');
 
-  return {
+  const sshOpts = {
     host,
     port,
     username,
-    privateKeyPath,
     readyTimeout: Number(server.readyTimeout || process.env.SSH_READY_TIMEOUT_MS || 15000)
   };
+
+  if (password) {
+    sshOpts.password = password;
+  } else if (privateKeyPath) {
+    const resolvedPath = expandHome(privateKeyPath);
+    sshOpts.privateKeyPath = resolvedPath;
+    if (fs.existsSync(resolvedPath)) {
+      sshOpts.privateKey = fs.readFileSync(resolvedPath, 'utf8');
+    }
+  }
+
+  return sshOpts;
 }
 
 export function assertKeyFileReadable(privateKeyPath) {
@@ -51,7 +62,6 @@ export class MonitoringSSHClient {
 
   async connect(server = {}) {
     const sshConfig = buildSSHConfig(server);
-    if (this.checkKeyFile) assertKeyFileReadable(sshConfig.privateKeyPath);
 
     try {
       await this.ssh.connect(sshConfig);
@@ -87,47 +97,16 @@ export class MonitoringSSHClient {
     }
   }
 
-  async streamCommand(command, handlers = {}) {
-    if (!command || typeof command !== 'string') {
-      throw new ValidationError('SSH stream command must be a non-empty string');
-    }
-
-    const connection = this.ssh.connection || this.ssh.getConnection?.();
-    if (!connection || typeof connection.exec !== 'function') {
-      throw new SSHConnectionError('Active SSH connection does not support streaming exec');
-    }
-
-    return new Promise((resolve, reject) => {
-      connection.exec(command, (error, stream) => {
-        if (error) return reject(new SSHConnectionError('SSH stream command failed to start', { command, cause: error.message }));
-
-        stream.on('data', (chunk) => handlers.onStdout?.(chunk.toString('utf8')));
-        stream.stderr?.on('data', (chunk) => handlers.onStderr?.(chunk.toString('utf8')));
-        stream.on('close', (code, signal) => handlers.onClose?.(code, signal));
-        stream.on('error', (streamError) => handlers.onError?.(streamError));
-        return resolve(stream);
-      });
-    });
-  }
-
-  dispose() {
+  disconnect() {
     try {
-      this.ssh.dispose?.();
-    } finally {
-      this.connectionConfig = null;
-    }
+      this.ssh.dispose();
+    } catch {}
   }
-}
-
-export async function createSSHClient(server, options = {}) {
-  const client = new MonitoringSSHClient(options);
-  return client.connect(server);
 }
 
 export default {
   MonitoringSSHClient,
   assertKeyFileReadable,
   buildSSHConfig,
-  createSSHClient,
   expandHome
 };

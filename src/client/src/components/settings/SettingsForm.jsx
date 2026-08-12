@@ -5,8 +5,8 @@ import { useAuth } from '../../context/AuthContext.jsx';
 export default function SettingsForm() {
   const { token, isAdmin } = useAuth();
   const [settings, setSettings] = useState({
-    GIT_ACCESS_TOKEN: 'ghp_****1234',
-    TARGET_GIT_REPO: 'https://github.com/organization/target-service.git',
+    GIT_ACCESS_TOKEN: '',
+    TARGET_GIT_REPO: '',
     AI_PROVIDER: 'GROQ',
   });
   const [message, setMessage] = useState('');
@@ -46,7 +46,7 @@ export default function SettingsForm() {
         </span>
       </div>
 
-      <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+      <form onSubmit={submit} style={{ display: 'flex', flexContent: 'column', flexDirection: 'column', gap: '14px' }}>
         <div>
           <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>
             Git Access Token (Encrypted Storage)
@@ -54,7 +54,7 @@ export default function SettingsForm() {
           <input
             type="password"
             value={settings.GIT_ACCESS_TOKEN || ''}
-            placeholder="ghp_****1234"
+            placeholder="Enter Git Access Token"
             disabled={!isAdmin}
             onChange={(e) => setSettings({ ...settings, GIT_ACCESS_TOKEN: e.target.value })}
           />

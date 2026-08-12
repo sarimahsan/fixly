@@ -1,8 +1,15 @@
 import React, { useEffect, useState } from 'react';
+import {
+  LayoutDashboard,
+  History,
+  Settings,
+  Server,
+  Activity
+} from 'lucide-react';
 import { AuthProvider, useAuth } from './context/AuthContext.jsx';
 import { api } from './api.js';
 import { useFixlySocket } from './hooks/useFixlySocket.js';
-import { sampleIncidents, upsertIncident } from './utils/incidentState.js';
+import { upsertIncident } from './utils/incidentState.js';
 import LiveFeed from './components/dashboard/LiveFeed.jsx';
 import ServerVitalsWidget from './components/dashboard/ServerVitalsWidget.jsx';
 import IssuesBoard from './components/dashboard/IssuesBoard.jsx';
@@ -13,7 +20,8 @@ import SettingsForm from './components/settings/SettingsForm.jsx';
 
 function Dashboard() {
   const { token, user, switchRole } = useAuth();
-  const [incidents, setIncidents] = useState(sampleIncidents);
+  const [incidents, setIncidents] = useState([]);
+  const [serverInfo, setServerInfo] = useState(null);
   const [events, setEvents] = useState([]);
   const [vitals, setVitals] = useState(null);
   const [resolveTarget, setResolveTarget] = useState(null);
@@ -21,18 +29,41 @@ function Dashboard() {
   const [activeTab, setActiveTab] = useState('dashboard');
 
   const connected = useFixlySocket((message) => {
-    setEvents((items) => [{ ...message, key: `${message.event}-${Date.now()}` }, ...items].slice(0, 15));
-    if (message.event === 'vitals:updated') setVitals(message.payload);
-    if (['incident:created', 'incident:updated', 'diagnosis:created', 'fix:proposed', 'incident:resolved'].includes(message.event)) {
-      setIncidents((items) => upsertIncident(items, message.payload));
+    if (message.event === 'vitals:updated') {
+      setVitals(message.payload);
+      return;
+    }
+    // Handle status updates and log events
+    if (['incident:created', 'incident:updated', 'log:error', 'diagnosis:created', 'fix:proposed', 'incident:resolved'].includes(message.event)) {
+      setEvents((items) => [
+        { ...message, key: `${message.event}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}` },
+        ...items,
+      ].slice(0, 40));
+
+      if (message.payload && typeof message.payload === 'object' && (message.payload.id || message.payload.incidentId)) {
+        setIncidents((items) => upsertIncident(items, message.payload));
+      }
     }
   });
 
   useEffect(() => {
+    // Fetch live incidents from database
     api
       .listIncidents(token)
       .then((data) => Array.isArray(data) && setIncidents(data))
-      .catch(() => null);
+      .catch(() => setIncidents([]));
+
+    // Fetch active target server info
+    api
+      .getServer()
+      .then((info) => info && setServerInfo(info))
+      .catch(() => setServerInfo(null));
+
+    // Fetch initial vitals
+    api
+      .getVitals()
+      .then((v) => v && setVitals(v))
+      .catch(() => setVitals(null));
   }, [token]);
 
   const resolveIncident = async (incident, notes) => {
@@ -51,6 +82,18 @@ function Dashboard() {
     setResolveTarget(null);
   };
 
+  const handleDeploySuccess = (incidentId) => {
+    setIncidents((items) =>
+      upsertIncident(items, {
+        id: incidentId,
+        status: 'RESOLVED',
+        resolvedAt: new Date().toISOString(),
+        resolvedByType: 'AI',
+        resolutionNotes: 'Auto-patched code on Hostinger VPS and restarted server.',
+      })
+    );
+  };
+
   return (
     <div className="app-container">
       {/* SIDEBAR NAVIGATION */}
@@ -67,25 +110,19 @@ function Dashboard() {
               className={`nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
               onClick={() => setActiveTab('dashboard')}
             >
-              📊 Dashboard
-            </div>
-            <div
-              className={`nav-item ${activeTab === 'issues' ? 'active' : ''}`}
-              onClick={() => setActiveTab('issues')}
-            >
-              🐛 Tracked Incidents
+              <LayoutDashboard size={16} /> Live Dashboard
             </div>
             <div
               className={`nav-item ${activeTab === 'history' ? 'active' : ''}`}
               onClick={() => setActiveTab('history')}
             >
-              📜 Resolution History
+              <History size={16} /> Resolution History
             </div>
             <div
               className={`nav-item ${activeTab === 'settings' ? 'active' : ''}`}
               onClick={() => setActiveTab('settings')}
             >
-              ⚙️ System Settings
+              <Settings size={16} /> System Settings
             </div>
           </div>
         </div>
@@ -112,17 +149,18 @@ function Dashboard() {
             <h1>Autonomous Incident Detection & Self-Healing</h1>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '16px' }}>
             <div className="target-badge">
-              <span className="pulse-dot"></span>
-              Target: <strong>prod-ec2 (16.192.151.190)</strong>
+              <span className="pulse-dot" style={{ backgroundColor: connected ? 'var(--status-emerald)' : 'var(--text-muted)' }}></span>
+              <Server size={14} style={{ color: 'var(--text-secondary)' }} />
+              <span>Target: <strong>{serverInfo?.name ? `${serverInfo.name} (${serverInfo.host})` : 'Connecting...'}</strong></span>
             </div>
 
             <div className="user-badge">
-              <div className="user-avatar">AM</div>
+              <div className="user-avatar">{user?.full_name ? user.full_name.slice(0, 2).toUpperCase() : user?.email ? user.email.slice(0, 2).toUpperCase() : 'U'}</div>
               <div className="user-info">
-                <span className="user-name">{user?.email || 'alex.mercer@fixly.local'}</span>
-                <span className="user-role">{user?.role || 'ADMIN'}</span>
+                <span className="user-name">{user?.email || 'Authenticated User'}</span>
+                <span className="user-role">{user?.role || 'OPERATOR'}</span>
               </div>
             </div>
           </div>
@@ -130,7 +168,7 @@ function Dashboard() {
 
         {/* CONTENT BODY */}
         <div className="content-body">
-          {(activeTab === 'dashboard' || activeTab === 'issues') && (
+          {activeTab === 'dashboard' && (
             <>
               <div className="grid-top">
                 <ServerVitalsWidget vitals={vitals} />
@@ -145,11 +183,11 @@ function Dashboard() {
             </>
           )}
 
-          {(activeTab === 'dashboard' || activeTab === 'history') && (
+          {activeTab === 'history' && (
             <HistoryList incidents={incidents} onDiff={setDiffTarget} />
           )}
 
-          {(activeTab === 'dashboard' || activeTab === 'settings') && (
+          {activeTab === 'settings' && (
             <SettingsForm />
           )}
         </div>
@@ -161,7 +199,11 @@ function Dashboard() {
         onClose={() => setResolveTarget(null)}
         onResolve={resolveIncident}
       />
-      <DiffViewer incident={diffTarget} onClose={() => setDiffTarget(null)} />
+      <DiffViewer
+        incident={diffTarget}
+        onClose={() => setDiffTarget(null)}
+        onDeploySuccess={handleDeploySuccess}
+      />
     </div>
   );
 }

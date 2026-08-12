@@ -1,11 +1,43 @@
-export const sampleIncidents = [
-  { id: 'inc-demo-1', title: 'UnhandledPromiseRejectionError: Connection Timeout', severity: 'HIGH', status: 'OPEN', occurrenceCount: 3, lastSeenAt: new Date().toISOString(), rootCause: 'Database connection pool exhausted.', diffPatch: '--- a/app.js\n+++ b/app.js\n@@ -1,2 +1,2 @@\n-db.connect()\n+await db.connectWithTimeout(5000)' },
-  { id: 'inc-demo-2', title: 'Disk usage threshold exceeded', severity: 'MEDIUM', status: 'IN_PROGRESS', occurrenceCount: 8, lastSeenAt: new Date().toISOString() }
-];
+export const sampleIncidents = [];
 
-export function upsertIncident(list, patch) {
+export function upsertIncident(list = [], patch = {}) {
+  if (!patch || typeof patch !== 'object') return list;
   const id = patch.id || patch.incidentId;
-  const existing = list.find((item) => item.id === id);
-  if (!existing) return [{ ...patch, id, status: patch.status || 'OPEN' }, ...list];
-  return list.map((item) => item.id === id ? { ...item, ...patch, id } : item);
+  if (!id) return list;
+
+  const existing = list.find((item) => item && String(item.id || item.incidentId) === String(id));
+
+  if (!existing) {
+    // Ignore partial WebSocket payloads (e.g. diagnosis/fix events) if no full incident exists yet
+    if (!patch.title && !patch.status && !patch.errorType && !patch.error_type) {
+      return list;
+    }
+    return [
+      {
+        id,
+        title: patch.title || patch.normalizedMessage || patch.rawLogLine || 'System Incident',
+        status: patch.status || 'OPEN',
+        severity: patch.severity || 'MEDIUM',
+        occurrenceCount: patch.occurrence_count || patch.occurrenceCount || 1,
+        ...patch,
+      },
+      ...list,
+    ];
+  }
+
+  // Preserve existing title, status, severity when partial payload updates arrive
+  return list.map((item) => {
+    if (item && String(item.id || item.incidentId) === String(id)) {
+      return {
+        ...item,
+        ...patch,
+        id,
+        title: patch.title || item.title,
+        status: patch.status || item.status || 'OPEN',
+        severity: patch.severity || item.severity || 'MEDIUM',
+        occurrenceCount: patch.occurrence_count || patch.occurrenceCount || item.occurrenceCount || 1,
+      };
+    }
+    return item;
+  });
 }

@@ -29,6 +29,7 @@ export const config = {
     host: process.env.SSH_HOST || 'localhost',
     port: parseInt(process.env.SSH_PORT || '22', 10),
     user: process.env.SSH_USER || 'root',
+    password: process.env.SSH_PASSWORD || '',
     keyPath: process.env.SSH_KEY_PATH || '~/.ssh/id_rsa',
     logPath: process.env.MONITOR_LOG_PATH || '/var/log/syslog',
     vitalsIntervalMs: parseInt(process.env.VITALS_INTERVAL_MS || '5000', 10)

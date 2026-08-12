@@ -10,6 +10,8 @@ async function request(path, { token, ...options } = {}) {
 }
 
 export const api = {
+  getServer: () => request('/api/server'),
+  getVitals: () => request('/api/vitals'),
   listIncidents: (token) => request('/api/incidents', { token }),
   resolveIncident: (id, resolutionNotes, token) => request(`/api/incidents/${id}/resolve`, { method: 'PATCH', body: JSON.stringify({ resolutionNotes }), token }),
   getSettings: (token) => request('/api/settings', { token }),

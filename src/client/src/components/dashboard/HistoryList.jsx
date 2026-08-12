@@ -1,57 +1,64 @@
 import React from 'react';
+import { History, FileCode, CheckCircle2 } from 'lucide-react';
 
 export default function HistoryList({ incidents = [], onDiff }) {
-  const resolved = incidents.filter((incident) => incident.status === 'RESOLVED');
+  const resolvedList = incidents.filter((i) => (i.status || '').toUpperCase() === 'RESOLVED');
+
   return (
     <section className="card">
       <div className="card-header">
         <div className="card-title">
-          <span>📜 Verified Resolution Audit Trail</span>
+          <History size={16} style={{ color: 'var(--brand-blue)' }} />
+          <span>Resolution History</span>
         </div>
-        <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--status-emerald)' }}>
-          ✓ {resolved.length} Auto/Manually Resolved
+        <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>
+          {resolvedList.length} incidents resolved
         </span>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        {resolved.length === 0 ? (
-          <p style={{ color: 'var(--text-muted)', fontSize: '13px' }}>
-            No resolved incidents recorded yet.
-          </p>
+      <div className="history-table-container">
+        {resolvedList.length > 0 ? (
+          <table>
+            <thead>
+              <tr>
+                <th>Incident ID</th>
+                <th>Title</th>
+                <th>Severity</th>
+                <th>Resolved At</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {resolvedList.map((incident) => (
+                <tr key={incident.id}>
+                  <td style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', fontWeight: 600 }}>
+                    {incident.id}
+                  </td>
+                  <td style={{ fontWeight: 600 }}>{incident.title}</td>
+                  <td>
+                    <span className={`pill ${String(incident.severity || 'LOW').toLowerCase()}`}>
+                      {incident.severity}
+                    </span>
+                  </td>
+                  <td>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: 'var(--status-emerald)' }}>
+                      <CheckCircle2 size={13} />{' '}
+                      {incident.resolvedAt ? new Date(incident.resolvedAt).toLocaleTimeString() : 'Recently'}
+                    </span>
+                  </td>
+                  <td>
+                    <button onClick={() => onDiff(incident)}>
+                      <FileCode size={13} /> View Patch
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         ) : (
-          resolved.map((incident) => (
-            <div
-              key={incident.id}
-              style={{
-                backgroundColor: '#f8fafc',
-                border: '1px solid var(--border-card)',
-                borderRadius: '10px',
-                padding: '14px',
-                display: 'flex',
-                alignItems: 'center',
-                justifySpace: 'space-between',
-              }}
-            >
-              <div>
-                <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
-                  {incident.title}
-                </div>
-                <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                  Resolved at:{' '}
-                  {incident.resolvedAt ? new Date(incident.resolvedAt).toLocaleString() : 'Recently'} • By:{' '}
-                  <strong style={{ color: 'var(--text-secondary)' }}>{incident.resolvedByType || 'HUMAN'}</strong>
-                </div>
-                {incident.resolutionNotes && (
-                  <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '4px', fontStyle: 'italic' }}>
-                    "{incident.resolutionNotes}"
-                  </div>
-                )}
-              </div>
-              <button onClick={() => onDiff(incident)}>
-                📄 Audit Diff
-              </button>
-            </div>
-          ))
+          <div style={{ color: 'var(--text-muted)', fontSize: '12px', padding: '16px 0' }}>
+            No resolved incidents logged yet.
+          </div>
         )}
       </div>
     </section>

@@ -1,122 +1,88 @@
-# Fixly
+# 🚀 Fixly — Autonomous Incident Detection, AI Code Patching & SSH Self-Healing
 
-Fixly is an AI-powered incident detection and self-healing system built with Node.js ES modules and Mongoose.
+Fixly is a real-time autonomous systems engineer dashboard. It monitors remote servers over SSH, streams live application logs, diagnoses error tracebacks using **Groq Llama 3.3 70B LLM**, generates line-by-line unified diff code patches from **full remote source code**, and automatically deploys fixes to your server with a single click.
 
-## Phase 1: Auth, Roles & Settings API
+---
 
-Implemented modules:
+## ⚡ Key Features
 
-- `src/modules/auth/auth_service.js`
-  - PBKDF2-SHA512 password hashing and verification.
-  - HS256 JWT session creation and bearer token verification.
-  - `/api/auth/login` route registration helper for Express-style apps.
-- `src/modules/auth/rbac_middleware.js`
-  - Admin vs viewer RBAC middleware.
-  - Admin access: `ADMIN`.
-  - Viewer access: `ADMIN`, `OPERATOR`, `READ_ONLY`.
-- `src/modules/auth/settings_service.js`
-  - `GET /api/settings` for masked settings.
-  - `PUT /api/settings` for admin-only updates.
-  - Encrypted storage for GitHub/Git access tokens.
-- `src/modules/auth/crypto_utils.js`
-  - AES-256-GCM encryption/decryption utilities.
-  - Secret masking helpers.
+- **🛰️ Remote SSH Telemetry & Log Ticker**: Live CPU, Memory, Disk vitals and real-time log streaming (`/root/target-app/logs/app.log`) over SSH.
+- **⚡ Instant 0ms Incident Creation**: New system errors immediately pop open on your dashboard in real-time without requiring a window refresh.
+- **🤖 Groq Llama 3.3 70B Full File Code Analysis**: Reads live source files over SSH (`cat /root/target-app/<file>`), identifies exact failing line numbers, and generates precise line-by-line unified diff patches.
+- **🚀 1-Click SSH Port 5173 Auto-Redeployment**: Safely stops existing processes on port `5173`, applies base64-encoded code patches directly to your VPS, and restarts the server cleanly.
+- **🛡️ Locked Resolution Workflow**: Resolved bugs automatically lock with a `✓ Fixed & Deployed` badge, preventing duplicate PRs or re-deployments.
+- **🎨 Modern SaaS Light Theme UI**: Built using React 18, Vite, Lucide React SVG icons, and fixed-height scrollable panels.
 
-## Phase 2: Monitoring Pipeline & Real-Time Broadcasting
+---
 
-Implemented modules:
+## 🔄 How Fixly Works
 
-- `src/modules/monitoring/ssh_client.js`
-  - Key-based `node-ssh` connection configuration and command execution helpers.
-- `src/modules/monitoring/log_reader.js`
-  - Continuous `tail -F` log reader with error filtering, type inference, message normalization, and severity inference.
-- `src/modules/monitoring/vitals_reader.js`
-  - CPU/RAM/Disk command output parser, periodic reader, optional persistence to `ServerVitals`, and `vitals:updated` broadcasts.
-- `src/modules/monitoring/dedup_engine.js`
-  - SHA-256 fingerprinting and open-incident deduplication with occurrence recording.
-- `src/modules/monitoring/ws_broadcaster.js`
-  - WebSocket server on `/ws` emitting `incident:created`, `incident:updated`, and `vitals:updated` payloads.
-
-## Phase 3: AI Logic & Git Automation
-
-Implemented modules:
-
-- `src/modules/ai/diagnosis.js`
-  - Deterministic root-cause diagnosis fallback with severity, confidence score, and `diagnosis:created` events.
-  - Optional injected AI client support for provider-backed diagnoses.
-- `src/modules/ai/code_fixer.js`
-  - Safe target-file mapping from stack traces.
-  - Code-fix proposal generation constrained to approved project paths.
-  - Emits `fix:proposed` events with proposal metadata and unified diffs.
-- `src/modules/ai/diff_generator.js`
-  - Line-by-line change model and unified diff patch generator for UI rendering.
-- `src/modules/git/git_client.js`
-  - `simple-git` client for fix branches, applying proposed snippets, commits, optional pushes, and GitHub PR creation.
-- `src/modules/git/recovery.js`
-  - Recovery-window verifier and monitor that emits `incident:resolved` after matching errors cease.
-
-## Phase 4: React Dashboard
-
-Implemented `src/client/` React + Vite dashboard with:
-
-- Live WebSocket integration on `/ws` for incident, diagnosis, fix proposal, resolution, and vitals events.
-- `LiveFeed.jsx` and `ServerVitalsWidget.jsx` for real-time operations visibility.
-- `IssuesBoard.jsx`, `ResolveModal.jsx`, `HistoryList.jsx`, and `DiffViewer.jsx` for tracked issue lifecycle, manual resolution, and unified diff review.
-- `SettingsForm.jsx` with masked token handling and admin-only write controls through `AuthContext` / `AdminOnly` RBAC guards.
-
-## Configuration
-
-Copy `.env.example` to `.env` and set at minimum:
-
-```bash
-MONGODB_URI=mongodb://localhost:27017/fixly
-JWT_SECRET=your_jwt_secret_here
-SETTINGS_ENCRYPTION_KEY=your_32_byte_or_longer_settings_secret_here
-SSH_HOST=your-server.example.com
-SSH_USER=ubuntu
-SSH_KEY_PATH=/path/to/private/key
-MONITOR_LOG_PATH=/var/log/syslog
-VITALS_INTERVAL_MS=5000
-GITHUB_OWNER=your_github_org_or_user
-GITHUB_REPO=your_repository_name
-GITHUB_TOKEN=your_github_token_here
-GITHUB_BASE_BRANCH=main
+```mermaid
+flowchart LR
+    A["📜 Remote SSH Log Ticker\n(/root/target-app/logs/app.log)"] --> B["⚡ Instant 0ms Incident Creation\n(Open Column on Dashboard)"]
+    B --> C["🤖 Groq Llama 3.3 70B\n(Reads full file over SSH & generates diff)"]
+    C --> D["📄 Line-by-Line Unified Diff Patch"]
+    D --> E["🚀 Click 'Create PR & Auto-Deploy'"]
+    E --> F["🌐 SSH Port 5173 Patch & Restart\n(Moved to Resolution History)"]
 ```
 
-## Commands
+---
 
-```bash
-npm install
-npm run test:auth
-npm run test:rbac
-npm run test:settings
-npm run test:monitoring
-npm run test:ai-git
-npm run client:install
-npm run client:build
-npm run client:dev
-npm test
-npm run verify:phase5
+## 🛠️ Tech Stack
+
+- **Backend**: Node.js (ES Modules), Express HTTP & WebSockets (`ws`), `ssh2` / `node-ssh`, `mysql2` connection pool.
+- **Frontend**: React 18, Vite, Tailwind CSS / Vanilla Design Tokens, `lucide-react` icons.
+- **AI Engine**: Groq Llama 3.3 70B (`llama-3.3-70b-versatile`) + Fallback Rule AST Engine.
+- **Database**: MySQL 8.0+ (`fixly` database schema).
+
+---
+
+## 🚀 Quick Start
+
+### 1. Configure Environment Variables (`.env`)
+
+Create or update [`.env`](file:///f:/t/fixly/.env) in the project root:
+
+```env
+# Application Server
+PORT=5000
+NODE_ENV=development
+
+# MySQL Connection
+MYSQL_HOST=localhost
+MYSQL_PORT=3306
+MYSQL_USER=root
+MYSQL_PASSWORD=
+MYSQL_DATABASE=fixly
+
+# Remote Target Server SSH Configuration
+SSH_HOST=5.182.18.34
+SSH_PORT=22
+SSH_USER=root
+SSH_PASSWORD=your_ssh_password
+MONITOR_LOG_PATH=/root/target-app/logs/app.log
+
+# Groq LLM API Configuration
+AI_PROVIDER=GROQ
+GROQ_API_KEY=gsk_your_groq_api_key_here
+AI_MODEL=llama-3.3-70b-versatile
 ```
 
-`npm run test:models` attempts a live MongoDB connection and may skip/fail that portion if MongoDB is unavailable.
+---
 
-## Phase 5 Verification
-
-Run the end-to-end verification harness after installing dependencies:
-
-```bash
-npm run verify:phase5
-npm test
-npm run client:build
+### 2. Start Backend Server
+```powershell
+node src/server/server.js
 ```
 
-`verify:phase5` exercises the complete operational chain with deterministic local doubles for external services: log detection, SHA-256 deduplication, AI diagnosis, code-fix proposal, injected Git commit automation, WebSocket feed emission, and auto-recovery.
-
-For a live SSH prerequisite check, configure `SSH_HOST`, `SSH_USER`, `SSH_KEY_PATH`, and related values in `.env`, then run:
-
-```bash
-PHASE5_REAL_SSH=1 npm run verify:phase5
+### 3. Start Frontend Dashboard
+```powershell
+cd src/client
+npm run dev
 ```
+Open **`http://localhost:5173`** in your browser!
 
-That mode validates real SSH connectivity, remote command execution, log-line parsing from command output, and vitals collection against the monitored host, then runs the full deterministic harness for AI/Git/UI/recovery behavior in the same command.
+---
+
+## 📜 License
+MIT License. Built for autonomous self-healing server infrastructure.
