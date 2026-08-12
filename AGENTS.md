@@ -1,27 +1,23 @@
 # Fixly — Agentic Coding Master Instructions & Rules
 
-> **CRITICAL RULE FOR ALL AI CODING AGENTS:**
-> Before taking any action, ask the human operator: *"Which User number are you operating as (User 1, User 2, User 3, or User 4)?"*
-> **STRICT SCOPE BOUNDARY:** You MUST ONLY read, modify, and build files belonging to your assigned User number as defined in `instructions/map.md` and `instructions/directory_structure.md`. Do not perform work owned by other users.
+> **WORKFLOW RULE:**
+> Development is executed sequentially on the single `main` branch, step-by-step through the phases defined in `instructions/map.md`. There are no separate user branches or user role prompts.
 
 ---
 
 ## 1. Core Principles for AI Agents
 
-1. **Role Scoping Enforcement**:
-   - **User 1 (Monitoring & Transport)**: Owns `src/modules/monitoring/`.
-   - **User 2 (AI Logic & Git)**: Owns `src/modules/ai/` and `src/modules/git/`.
-   - **User 3 (UI & UX)**: Owns `src/client/` (Frontend React + Vite + Tailwind CSS Dashboard & Settings UI).
-   - **User 4 (Lead & Auth & Target Environment)**: Owns `src/modules/auth/` (Auth & Backend Settings API `GET`/`PUT /api/settings`), `src/models/`, `target_environment/`.
+1. **Sequential Module Execution**:
+   - Work through the project phases linearly as outlined in `instructions/map.md`:
+     - **Phase 0 (Shared Foundation)**: Types (`src/common/types.js`) and Mongoose models (`src/models/`).
+     - **Phase 1 (Target Environment & Auth)**: Error simulator (`target_environment/`), Auth (`src/modules/auth/`), Settings API.
+     - **Phase 2 (Monitoring & Transport)**: SSH client, vitals, log parser, deduplication (`src/modules/monitoring/`).
+     - **Phase 3 (AI Logic & Git)**: AI diagnosis, patch generator, Git automation (`src/modules/ai/`, `src/modules/git/`).
+     - **Phase 4 (UI & UX Dashboard)**: Frontend React app (`src/client/`).
+     - **Phase 5 (End-to-End Verification)**: Integration testing and walkthrough.
 2. **Git Branching Strategy**:
-   - **Phase 0 (Shared Foundation)**: User 4 builds and pushes shared types (`src/common/types.js`) and MongoDB Mongoose models (`src/models/`) to `main` first before feature branches are cut.
-   - Every User then cuts their dedicated feature branch from `main`:
-     - **User 1**: `user-1/monitoring`
-     - **User 2**: `user-2/ai-git`
-     - **User 3**: `user-3/ui`
-     - **User 4**: `user-4/lead-auth`
-   - Commit all phase completions to your assigned branch.
-   - Do NOT merge feature branches into `main` directly — all feature branches will be merged into `main` at the end after end-to-end verification (Phase 4.4).
+   - All commits are made directly to the `main` branch.
+   - Commit incrementally at the completion of each sub-phase.
 3. **Contract-Driven Interfaces**:
    - Always rely on shared JavaScript schemas/types in `src/common/types.js` and API/WS payloads in `instructions/DECISIONS.md`.
    - Never change a shared interface or database schema without documenting the change in `instructions/DECISIONS.md`.
@@ -38,27 +34,26 @@
 
 | File Path | Purpose & Instructions |
 | :--- | :--- |
-| [map.md](file:///f:/fixly/instructions/map.md) | **Master Roadmap**: Defines phase deliverables for User 1, 2, 3, 4. |
+| [map.md](file:///f:/fixly/instructions/map.md) | **Master Roadmap**: Defines phase deliverables in sequential order. |
 | [schema.md](file:///f:/fixly/instructions/schema.md) | **DB Schema Reference**: MongoDB Mongoose document models, collections, and subdocuments. |
-| [directory_structure.md](file:///f:/fixly/instructions/directory_structure.md) | **Code Tree Reference**: File layout and module ownership matrix. |
+| [directory_structure.md](file:///f:/fixly/instructions/directory_structure.md) | **Code Tree Reference**: File layout and module domain matrix. |
 | [DECISIONS.md](file:///f:/fixly/instructions/DECISIONS.md) | **Shared Contracts**: API payloads, WebSocket event format, data types. |
-| [PROGRESS.md](file:///f:/fixly/instructions/PROGRESS.md) | **Live State Tracker**: Log completed phases, blockers, and agent handoffs. |
+| [PROGRESS.md](file:///f:/fixly/instructions/PROGRESS.md) | **Live State Tracker**: Log completed phases, blockers, and verification results. |
 
 ---
 
-## 3. Communication Protocols Between Agents
+## 3. Communication & State Logging Protocol
 
 When working as an agent on this repository:
 1. **At Start of Task**:
-   - Read `instructions/PROGRESS.md` to see what previous agents completed.
-   - Confirm your assigned User role.
-2. **When Changing a Interface / Schema**:
+   - Read `instructions/PROGRESS.md` to see what phases are completed and what is pending next.
+2. **When Changing an Interface / Schema**:
    - Log the proposed contract update in `instructions/DECISIONS.md`.
 3. **At End of Task / Phase**:
    - Update `instructions/PROGRESS.md` with:
-     - Phase completed (e.g. `User 1 - Phase 1.1 DONE`).
+     - Phase completed (e.g. `Phase 1.1 DONE`).
      - Verification command used and test status.
-     - Notes for downstream agents (e.g. "User 3 can consume WebSocket event `incident:created`").
+     - Notes for subsequent phases (e.g. "WebSocket event `incident:created` ready for UI integration").
 
 ---
 
@@ -70,3 +65,4 @@ When working as an agent on this repository:
 - **Frontend Framework**: React 18+ with Vite (JavaScript / JSX) & Tailwind CSS.
 - **ODM / Database**: MongoDB with Mongoose document models.
 - **Code Style**: Async/await for asynchronous I/O, explicit Mongoose schemas, detailed logging.
+

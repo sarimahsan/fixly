@@ -1,136 +1,105 @@
-# Fixly — Agent Build Instructions
+# Fixly — Master Sequential Execution Roadmap
 
-This file tells your AI coding agent exactly what to build. Each team member uses this same file — the agent should only do the work listed under **your** user number. Do not build other members' sections; that work is being done in parallel by someone else.
-
-Tell your agent at the start of the session: *"I am User [1/2/3/4]. Only do the work listed under my section in this file. Do not touch other sections."*
+This file defines the step-by-step sequential build plan for **Fixly**. All development is conducted linearly on the `main` git branch, phase by phase.
 
 ---
 
-## Shared Context (all agents should read this first)
+## System Context
 
 We are building **Fixly**, an AI-powered incident detection and self-healing system. It watches a remote server's logs and resource usage over SSH, groups repeated errors into single tracked incidents, uses AI to diagnose issues and propose code fixes, commits those fixes to Git, and displays everything on a live dashboard with role-based access and a full history/audit trail.
 
-Work is split into 4 phases. Work through your own phases in order. Each phase should be runnable/testable before moving to the next.
-
-### Git Branching & Merging Strategy
-- **Phase 0 (Shared Foundation)**: Before feature branches are cut, User 4 builds and pushes shared schemas/types (`src/common/types.js`) and MongoDB Mongoose models (`src/models/`) directly to `main`.
-- Each user then branches off `main` to their dedicated feature branch:
-  - **User 1**: `user-1/monitoring`
-  - **User 2**: `user-2/ai-git`
-  - **User 3**: `user-3/ui`
-  - **User 4**: `user-4/lead-auth`
-- Commit code incrementally to your assigned branch.
-- **Do NOT merge feature branches into `main` directly.** All user branches will be merged into `main` at the end after Phase 4.4 End-to-End Verification.
+### Development Workflow & Git Strategy
+- **Single Branch (`main`)**: All changes are committed directly to `main` upon completing and verifying each sub-phase.
+- **Sequential Order**: Work through phases in order from Phase 0 to Phase 5. Each phase must be tested and runnable before moving to the next.
 
 ---
 
-## User 1 — Server Connection & Monitoring
+## Phase 0 — Foundation & Shared Contracts
 
-**You own:** everything that reads data from the target server. Do not build AI logic, the UI, or auth — other users own those.
+### Phase 0.1 — Shared Types & Constants
+- Build `src/common/types.js` defining all shared interfaces, error models, vitals formats, and WebSocket message schemas.
+- Ensure logger and configuration utilities are initialized.
 
-### Phase 1.1 — SSH Connection
-- Set up a backend module that connects to the target server using key-based SSH authentication.
-- Read connection details (host, user, key path) from environment variables.
-- Confirm the connection works before building anything on top of it.
-
-### Phase 1.2 — Log Reading
-- Continuously read the application's log file on the target server.
-- Detect new lines as they're written, and identify which lines are errors.
-
-### Phase 1.3 — Server Vitals
-- Pull live memory, disk, and CPU usage from the target server on a regular interval.
-- Return this as structured data (not raw command output).
-
-### Phase 1.4 — Error Deduplication
-- Fingerprint each detected error (by type + normalized message, stripping timestamps/IDs).
-- If the same fingerprint is already an open, unresolved issue, increment its occurrence count instead of creating a new one.
-- If it's a new fingerprint, mark it as a new issue.
-
-### Phase 1.5 — Real-Time Streaming
-- Emit new issues, occurrence count updates, and vitals updates over a real-time channel (WebSocket) so other parts of the app can consume them live.
-
-**Done when:** triggering the same error repeatedly on the target server results in one issue with a rising counter, not duplicates, and live vitals are visible in raw output/logs.
+### Phase 0.2 — Database Schemas & Models
+- Build Mongoose document models in `src/models/` (`User`, `MonitoredServer`, `Incident`, `IncidentOccurrence`, `ServerVitals`, `AppSetting`, `AuditLog`).
 
 ---
 
-## User 2 — AI Logic & Version Control Integration
+## Phase 1 — Target Environment & Access Control
 
-**You own:** everything that thinks about and acts on an error. Do not build the SSH/monitoring layer or the UI — other users own those.
+### Phase 1.1 — Target Application & Error Harness
+- Set up `target_environment/` with a dummy application and trigger panel.
+- Implement reproducible error scenarios (e.g. database timeout, syntax/reference error, unhandled promise).
+- Ensure at least 2 error types map to real, fixable source files.
 
-### Phase 2.1 — AI Diagnosis
-- Build a function that takes an error and its surrounding log context and returns: severity, likely root cause, confidence score, and whether an automated fix exists.
-- This should run once per new issue, not once per occurrence.
-
-### Phase 2.2 — AI Code-Fix Proposal
-- For a small, known set of error types, map each to a specific file in the connected codebase.
-- Build a function that reads that file, sends it plus the error to the AI, and gets back a proposed fix for the specific function/block responsible.
-- Do not let the AI touch files outside this known mapping.
-
-### Phase 2.3 — Before/After Diff
-- Given the original code and the proposed fix, produce a clear line-by-line comparison of what would change.
-
-### Phase 2.4 — Git Integration
-- Connect to the code repository using a stored access token.
-- Create a new branch per fix, commit the proposed change to it, and either push directly or open a request for review, depending on configuration.
-- Record the resulting commit reference or review link.
-
-### Phase 2.5 — Recovery Verification
-- After a fix is applied, monitor for whether the same error fingerprint stops recurring.
-- Mark the issue as resolved automatically once confirmed clean for a short window.
-
-**Done when:** a known error type produces a diagnosis, a proposed fix with a before/after comparison, a real commit in the repository, and the issue auto-resolves once the error stops recurring.
+### Phase 1.2 — Authentication & Roles
+- Build backend authentication (`src/modules/auth/`) with password hashing and JWT sessions.
+- Implement Role-Based Access Control (RBAC middleware) with `admin` and `viewer` roles.
+- Implement Backend Settings API (`GET /api/settings`, `PUT /api/settings`) with token encryption.
 
 ---
 
-## User 3 — Interface & User Experience
+## Phase 2 — Server Connection & Monitoring
 
-**You own:** everything the user sees and interacts with. Do not build backend logic, AI calls, or the SSH layer — other users own those and will hand you data in an agreed format.
+### Phase 2.1 — SSH Connection
+- Implement key-based SSH connection using `node-ssh` in `src/modules/monitoring/ssh_client.js`.
+- Read connection credentials from environment variables / DB settings.
 
-### Phase 3.1 — Live Dashboard
-- Build the main view: a live feed of incoming issues (title, severity, occurrence count, status), updating in real time via WebSocket.
-- Add a panel showing live server vitals (memory/disk usage as simple visual indicators).
+### Phase 2.2 — Log Reading & Parsing
+- Implement continuous log stream reader in `src/modules/monitoring/log_reader.js`.
+- Parse log entries in real-time and filter error events.
 
-### Phase 3.2 — Tracked Issues View
-- Build a list/board of tracked issues with their current status (Open, In Progress, Resolved).
-- Allow status to be changed manually, with an optional notes field, for issues resolved by a person rather than AI.
+### Phase 2.3 — Server Vitals Monitor
+- Implement periodic resource parser in `src/modules/monitoring/vitals_reader.js` (CPU, Memory, Disk usage).
 
-### Phase 3.3 — History View
-- Build a view listing all resolved issues, regardless of how they were resolved.
-- Each entry should expand to show either a before/after code comparison (AI-resolved) or resolver notes (human-resolved).
+### Phase 2.4 — SHA-256 Error Deduplication
+- Implement fingerprinting in `src/modules/monitoring/dedup_engine.js`.
+- Increment occurrence counters for existing open incidents; create new entries for novel fingerprints.
 
-### Phase 3.4 — Settings View
-- Build a settings page, visible only to elevated/admin access, for entering and updating the repository access token and related configuration.
-- Never display the full token once saved — show a masked version.
-
-### Phase 3.5 — Role-Aware UI
-- Hide or disable action buttons (fix actions, status changes, settings) for users without sufficient access, based on the role provided by the auth system.
-
-**Done when:** the dashboard updates live without a refresh, issues can be tracked and manually resolved, history shows both resolution types correctly, and the settings page is only reachable by an elevated role.
+### Phase 2.5 — Real-Time WebSocket Streaming
+- Implement `src/modules/monitoring/ws_broadcaster.js` to broadcast vitals, incident creations, and occurrence updates live over WebSockets.
 
 ---
 
-## User 4 — Demo Environment, Access Control & Coordination (Lead)
+## Phase 3 — AI Logic & Version Control Integration
 
-**You own:** the environment everything runs against, who can do what, and keeping the other three phases connected. Do not build the monitoring, AI, or UI logic yourself — focus on environment, access, and integration.
+### Phase 3.1 — AI Diagnosis Engine
+- Implement `src/modules/ai/diagnosis.js` to diagnose root cause, assign severity, and calculate confidence score.
 
-### Phase 4.1 — Target Environment
-- Set up the target server/application that will be monitored.
-- Build in a small, fixed set of reproducible error scenarios (e.g., a button or endpoint that triggers each one on demand).
-- Make sure at least two error types map to real, fixable code so User 2's code-fix work has something real to act on.
+### Phase 3.2 — AI Code-Fix Proposal Generator
+- Implement `src/modules/ai/code_fixer.js` to inspect affected codebase files and propose code patches.
 
-### Phase 4.2 — Authentication & Roles
-- Build login and a small set of access roles (at minimum: elevated/admin and read-only).
-- Issue each authenticated session a role that the UI and backend can both check before allowing sensitive actions.
+### Phase 3.3 — Line-by-Line Diff Generator
+- Implement `src/modules/ai/diff_generator.js` to generate unified line-by-line diffs for UI rendering.
 
-### Phase 4.3 — Integration Checkpoints
-- Confirm User 1's output format matches what User 2 expects before User 2 builds against it.
-- Confirm User 2's output format matches what User 3 expects before User 3 builds against it.
-- Confirm your auth/role output matches what User 3 expects for role-aware UI.
+### Phase 3.4 — Git Integration & PR Automation
+- Implement `src/modules/git/git_client.js` using `simple-git` to branch, commit proposed fixes, and create GitHub PRs or push commits.
 
-### Phase 4.4 — End-to-End Verification
-- Once all parts are connected, personally trigger each error scenario and confirm the full path works: detection → dedup → diagnosis → fix/manual resolution → history.
+### Phase 3.5 — Auto-Recovery Verification
+- Implement `src/modules/git/recovery.js` to monitor log streams post-fix and auto-resolve incidents when errors cease.
 
-### Phase 4.5 — Final Walkthrough
-- Prepare and rehearse a run-through of the finished system from start to finish.
+---
 
-**Done when:** the target environment reliably produces each error scenario, login/roles work end-to-end, and a full run-through completes without manual patching mid-demo.
+## Phase 4 — Frontend UI & User Experience
+
+### Phase 4.1 — Live Incident Feed & Vitals Dashboard
+- Implement React + Vite dashboard in `src/client/` with live WebSocket feed and server vitals widgets.
+
+### Phase 4.2 — Tracked Issues Board & Manual Resolution
+- Implement issues management board with status lifecycle (`Open`, `In Progress`, `Resolved`) and manual resolution modals.
+
+### Phase 4.3 — Incident History & Code Diff Viewer
+- Implement history list showing resolution audit trails and visual code diff comparison modals.
+
+### Phase 4.4 — Masked Settings & Access Control UI
+- Implement settings view with masked GitHub tokens and RBAC button/action visibility guards.
+
+---
+
+## Phase 5 — Integration & Final Verification
+
+### Phase 5.1 — End-to-End System Test
+- Trigger each error scenario from `target_environment/` and verify complete flow: Log Detection → Fingerprint Dedup → AI Diagnosis → Git Patch → Live UI Update → Auto-Recovery.
+
+### Phase 5.2 — Final Rehearsal & Documentation Walkthrough
+- Confirm zero console errors, clean test suite execution, and verify all documentation.
