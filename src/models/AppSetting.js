@@ -1,10 +1,32 @@
-import mongoose from 'mongoose';
+import { getPool } from '../common/db.js';
 
-const AppSettingSchema = new mongoose.Schema({
-  key: { type: String, required: true, unique: true, index: true },
-  valueEncrypted: { type: String, required: true },
-  maskedValue: { type: String, required: true }
-}, { timestamps: true });
+export const AppSettingModel = {
+  async getAll() {
+    const pool = getPool();
+    const [rows] = await pool.query('SELECT setting_key, masked_value, updated_at FROM app_settings');
+    const settings = {};
+    rows.forEach(r => {
+      settings[r.setting_key] = r.masked_value;
+    });
+    return settings;
+  },
 
-export const AppSetting = mongoose.models.AppSetting || mongoose.model('AppSetting', AppSettingSchema);
-export default AppSetting;
+  async getByKey(key) {
+    const pool = getPool();
+    const [rows] = await pool.query('SELECT * FROM app_settings WHERE setting_key = ?', [key]);
+    return rows[0] || null;
+  },
+
+  async upsert(key, valueEncrypted, maskedValue) {
+    const pool = getPool();
+    await pool.query(
+      `INSERT INTO app_settings (setting_key, value_encrypted, masked_value)
+       VALUES (?, ?, ?)
+       ON DUPLICATE KEY UPDATE value_encrypted = VALUES(value_encrypted), masked_value = VALUES(masked_value), updated_at = NOW()`,
+      [key, valueEncrypted, maskedValue]
+    );
+    return this.getByKey(key);
+  }
+};
+
+export default AppSettingModel;

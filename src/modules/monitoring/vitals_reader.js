@@ -1,5 +1,5 @@
 import { EventEmitter } from 'node:events';
-import { ServerVitals } from '../../models/ServerVitals.js';
+import { ServerVitalsModel } from '../../models/ServerVitals.js';
 import { validateServerVitals, WSEventType } from '../../common/types.js';
 
 export const DEFAULT_VITALS_COMMAND = [
@@ -59,7 +59,12 @@ export async function readVitalsOnce(sshClient, { serverId, command = DEFAULT_VI
   };
 
   if (persist && serverId) {
-    await ServerVitals.create(vitals);
+    await ServerVitalsModel.record({
+      serverId,
+      cpuUsagePercent: vitals.cpuUsagePercent,
+      memoryUsagePercent: vitals.memoryUsagePercent,
+      diskUsagePercent: vitals.diskUsagePercent,
+    });
   }
 
   return vitals;

@@ -1,41 +1,73 @@
-import mongoose from 'mongoose';
-import config from './config.js';
-import logger from './logger.js';
+import mysql from 'mysql2/promise';
+import { config } from './config.js';
+import { logger } from './logger.js';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-export async function connectDB(customUri) {
-  const uri = customUri || config.mongodb.uri;
-  
-  if (mongoose.connection.readyState === 1) {
-    logger.info('MongoDB connection already established');
-    return mongoose.connection;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+let pool = null;
+
+/**
+ * Get active MySQL connection pool
+ */
+export function getPool() {
+  if (!pool) {
+    pool = mysql.createPool({
+      host: config.mysql.host,
+      port: config.mysql.port,
+      user: config.mysql.user,
+      password: config.mysql.password,
+      database: config.mysql.database,
+      waitForConnections: true,
+      connectionLimit: 10,
+      queueLimit: 0,
+      multipleStatements: true,
+    });
   }
+  return pool;
+}
 
+/**
+ * Initialize Database & Tables (Auto-bootstrapping for MySQL & phpMyAdmin)
+ */
+export async function initDatabase() {
   try {
-    mongoose.connection.on('connected', () => {
-      logger.info(`MongoDB connected successfully to ${uri}`);
+    logger.info(`Connecting to MySQL host at ${config.mysql.host}:${config.mysql.port}...`);
+    
+    // Step 1: Connect to server without database selected to ensure DB exists
+    const rootConn = await mysql.createConnection({
+      host: config.mysql.host,
+      port: config.mysql.port,
+      user: config.mysql.user,
+      password: config.mysql.password,
+      multipleStatements: true,
     });
 
-    mongoose.connection.on('error', (err) => {
-      logger.error('MongoDB connection error:', { error: err.message });
-    });
+    await rootConn.query(`CREATE DATABASE IF NOT EXISTS \`${config.mysql.database}\` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;`);
+    await rootConn.end();
+    logger.info(`Database '${config.mysql.database}' confirmed/created.`);
 
-    mongoose.connection.on('disconnected', () => {
-      logger.warn('MongoDB disconnected');
-    });
+    // Step 2: Initialize connection pool with database
+    const dbPool = getPool();
 
-    await mongoose.connect(uri, config.mongodb.options);
-    return mongoose.connection;
-  } catch (error) {
-    logger.error('Failed to connect to MongoDB', { error: error.message });
-    throw error;
+    // Step 3: Load and execute init SQL script
+    const sqlPath = path.resolve(__dirname, '../../scripts/init_mysql.sql');
+    if (fs.existsSync(sqlPath)) {
+      const sqlContent = fs.readFileSync(sqlPath, 'utf8');
+      await dbPool.query(sqlContent);
+      logger.info('MySQL tables and seed records initialized successfully from init_mysql.sql.');
+    } else {
+      logger.warn(`SQL init file not found at ${sqlPath}. Skipping SQL script execution.`);
+    }
+
+    return true;
+  } catch (err) {
+    logger.error('Failed to initialize MySQL Database:', err.message);
+    throw err;
   }
 }
 
-export async function disconnectDB() {
-  if (mongoose.connection.readyState !== 0) {
-    await mongoose.disconnect();
-    logger.info('MongoDB disconnected cleanly');
-  }
-}
-
-export default { connectDB, disconnectDB };
+export default { getPool, initDatabase };

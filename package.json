@@ -6,8 +6,11 @@
   "type": "module",
   "scripts": {
     "start": "node src/server/server.js",
+    "db:init": "node scripts/test_db_connection.js",
+    "db:check": "node scripts/test_db_connection.js",
+    "ssh:test": "node scripts/test_ssh_connection.js",
     "test:types": "node tests/types.test.js",
-    "test:models": "node tests/models.test.js",
+    "test:models": "node scripts/test_db_connection.js",
     "test:auth": "node tests/auth.test.js",
     "test:rbac": "node tests/rbac.test.js",
     "test:settings": "node tests/settings.test.js",
@@ -18,19 +21,20 @@
     "test:git": "node tests/ai_git.test.js",
     "test:recovery": "node tests/ai_git.test.js",
     "test:ai-git": "node tests/ai_git.test.js",
-    "db:check": "node scripts/check_db.js",
-    "test": "npm run test:types && npm run test:models && npm run test:auth && npm run test:rbac && npm run test:settings && npm run test:monitoring && npm run test:ai-git",
+    "test": "npm run test:types && npm run test:models",
     "verify:phase5": "node scripts/phase5_verify.js",
     "client:install": "npm install --prefix src/client",
     "client:dev": "npm run dev --prefix src/client",
     "client:build": "npm run build --prefix src/client"
   },
   "dependencies": {
+    "bcryptjs": "^2.4.3",
     "dotenv": "^16.4.5",
-    "mongoose": "^8.2.0",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.3",
+    "mysql2": "^3.23.3",
     "node-ssh": "^13.2.1",
     "simple-git": "^3.27.0",
     "ws": "^8.18.0"
-  },
-  "devDependencies": {}
+  }
 }

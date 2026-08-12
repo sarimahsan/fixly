@@ -1,4 +1,4 @@
-export const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
+export const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
 async function request(path, { token, ...options } = {}) {
   const res = await fetch(`${API_BASE}${path}`, {
@@ -19,6 +19,5 @@ export const api = {
 export function wsUrl() {
   const base = import.meta.env.VITE_WS_URL;
   if (base) return base;
-  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
-  return `${proto}//${location.host}/ws`;
+  return 'ws://localhost:5000/ws';
 }

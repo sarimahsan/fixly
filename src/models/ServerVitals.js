@@ -1,14 +1,27 @@
-import mongoose from 'mongoose';
+import { getPool } from '../common/db.js';
 
-const ServerVitalsSchema = new mongoose.Schema({
-  serverId: { type: mongoose.Schema.Types.ObjectId, ref: 'MonitoredServer', required: true },
-  cpuUsagePercent: { type: Number, required: true },
-  memoryUsagePercent: { type: Number, required: true },
-  diskUsagePercent: { type: Number, required: true },
-  timestamp: { type: Date, default: Date.now }
-});
+export const ServerVitalsModel = {
+  async getLatest(serverId = null) {
+    const pool = getPool();
+    let query = 'SELECT * FROM server_vitals';
+    const params = [];
+    if (serverId) {
+      query += ' WHERE server_id = ?';
+      params.push(serverId);
+    }
+    query += ' ORDER BY timestamp DESC LIMIT 1';
+    const [rows] = await pool.query(query, params);
+    return rows[0] || null;
+  },
 
-ServerVitalsSchema.index({ timestamp: 1 }, { expireAfterSeconds: 604800 });
+  async record({ serverId = 1, cpuUsagePercent, memoryUsagePercent, diskUsagePercent }) {
+    const pool = getPool();
+    const [result] = await pool.query(
+      'INSERT INTO server_vitals (server_id, cpu_usage_percent, memory_usage_percent, disk_usage_percent) VALUES (?, ?, ?, ?)',
+      [serverId, cpuUsagePercent, memoryUsagePercent, diskUsagePercent]
+    );
+    return result.insertId;
+  }
+};
 
-export const ServerVitals = mongoose.models.ServerVitals || mongoose.model('ServerVitals', ServerVitalsSchema);
-export default ServerVitals;
+export default ServerVitalsModel;

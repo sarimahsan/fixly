@@ -1,5 +1,37 @@
-const severityClass = (severity) => `pill ${String(severity || 'LOW').toLowerCase()}`;
+import React from 'react';
 
-export default function LiveFeed({ events, connected }) {
-  return <section className="card live-feed"><div className="card-title"><h2>Live incident feed</h2><span className={connected ? 'online' : 'offline'}>{connected ? 'Live' : 'Offline'}</span></div>{events.length === 0 ? <p className="muted">No live events yet.</p> : events.map((item) => <article className="feed-item" key={item.key}><span className={severityClass(item.payload?.severity)}>{item.payload?.severity || item.event}</span><div><strong>{item.payload?.title || item.payload?.normalizedMessage || item.event}</strong><p>{new Date(item.timestamp).toLocaleString()} · {item.payload?.status || 'streamed'}</p></div></article>)}</section>;
+export default function LiveFeed({ events = [], connected = false }) {
+  return (
+    <section className="card live-feed">
+      <div className="card-header">
+        <div className="card-title">
+          <span>📡 Telemetry Stream</span>
+        </div>
+        <span className={connected ? 'target-badge' : 'pill low'}>
+          {connected && <span className="pulse-dot"></span>}
+          {connected ? 'SSH Connected' : 'Connecting...'}
+        </span>
+      </div>
+
+      <div className="feed-ticker">
+        {events.length === 0 ? (
+          <div className="feed-item">
+            <div className="feed-time">{new Date().toLocaleTimeString()} — telemetry</div>
+            <div className="feed-text">SSH stream active. Waiting for error log events...</div>
+          </div>
+        ) : (
+          events.map((item) => (
+            <div className="feed-item" key={item.key || Math.random()}>
+              <div className="feed-time">
+                {new Date(item.timestamp || Date.now()).toLocaleTimeString()} — {item.event}
+              </div>
+              <div className="feed-text">
+                {item.payload?.title || item.payload?.normalizedMessage || JSON.stringify(item.payload)}
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </section>
+  );
 }

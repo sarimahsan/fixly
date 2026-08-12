@@ -10,10 +10,13 @@ dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 export const config = {
   env: process.env.NODE_ENV || 'development',
-  port: parseInt(process.env.PORT || '3000', 10),
-  mongodb: {
-    uri: process.env.MONGODB_URI || 'mongodb://localhost:27017/fixly',
-    options: {}
+  port: parseInt(process.env.PORT || '5000', 10),
+  mysql: {
+    host: process.env.MYSQL_HOST || 'localhost',
+    port: parseInt(process.env.MYSQL_PORT || '3306', 10),
+    user: process.env.MYSQL_USER || 'root',
+    password: process.env.MYSQL_PASSWORD || '',
+    database: process.env.MYSQL_DATABASE || 'fixly',
   },
   jwt: {
     secret: process.env.JWT_SECRET || 'fixly-default-dev-secret-change-in-production',
