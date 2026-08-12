@@ -18,11 +18,11 @@ This file is dynamically updated by coding agents to record phase completions an
 | **Phase 2.3 — Server Vitals Monitor** | Monitoring | 🟢 DONE | `npm run test:monitoring` | 2026-08-12 |
 | **Phase 2.4 — SHA-256 Deduplication** | Monitoring | 🟢 DONE | `npm run test:monitoring` | 2026-08-12 |
 | **Phase 2.5 — Real-Time WebSocket Streaming** | Monitoring | 🟢 DONE | `npm run test:monitoring` | 2026-08-12 |
-| **Phase 3.1 — AI Diagnosis Engine** | AI Logic | 🔴 Pending | `npm run test:ai:diag` | - |
-| **Phase 3.2 — AI Code-Fix Generator** | AI Logic | 🔴 Pending | `npm run test:ai:fix` | - |
-| **Phase 3.3 — Line-by-Line Diff Generator** | AI Logic | 🔴 Pending | `npm run test:diff` | - |
-| **Phase 3.4 — Git PR Automation** | Git Integration | 🔴 Pending | `npm run test:git` | - |
-| **Phase 3.5 — Auto-Recovery Verification** | Git Integration | 🔴 Pending | `npm run test:recovery` | - |
+| **Phase 3.1 — AI Diagnosis Engine** | AI Logic | 🟢 DONE | `npm run test:ai:diag` | 2026-08-12 |
+| **Phase 3.2 — AI Code-Fix Generator** | AI Logic | 🟢 DONE | `npm run test:ai:fix` | 2026-08-12 |
+| **Phase 3.3 — Line-by-Line Diff Generator** | AI Logic | 🟢 DONE | `npm run test:diff` | 2026-08-12 |
+| **Phase 3.4 — Git PR Automation** | Git Integration | 🟢 DONE | `npm run test:git` | 2026-08-12 |
+| **Phase 3.5 — Auto-Recovery Verification** | Git Integration | 🟢 DONE | `npm run test:recovery` | 2026-08-12 |
 | **Phase 4.1 — Live Feed & Vitals Dashboard** | Frontend UI | 🔴 Pending | UI Verification | - |
 | **Phase 4.2 — Tracked Issues Board** | Frontend UI | 🔴 Pending | UI Verification | - |
 | **Phase 4.3 — History & Diff Viewer Modal** | Frontend UI | 🔴 Pending | UI Verification | - |
@@ -65,3 +65,22 @@ This file is dynamically updated by coding agents to record phase completions an
   - Added `SETTINGS_ENCRYPTION_KEY` configuration and `.env.example` documentation.
   - Verified via `npm run test:settings`.
 
+
+
+### Phase 3 — AI Logic & Version Control Integration (2026-08-12)
+- **Phase 3.1 (AI Diagnosis Engine)**:
+  - Added `src/modules/ai/diagnosis.js` with deterministic incident diagnosis, severity escalation, confidence scoring, optional injected AI provider hook, and `diagnosis:created` WebSocket event emission.
+  - Verified via `npm run test:ai:diag`.
+- **Phase 3.2 (AI Code-Fix Generator)**:
+  - Added `src/modules/ai/code_fixer.js` with safe stack-trace-to-file mapping, approved target path enforcement, proposal IDs, snippet capture, and `fix:proposed` broadcasts.
+  - Verified via `npm run test:ai:fix`.
+- **Phase 3.3 (Line-by-Line Diff Generator)**:
+  - Added `src/modules/ai/diff_generator.js` with LCS-based change tracking, unified patch generation, and diff summary helpers.
+  - Verified via `npm run test:diff`.
+- **Phase 3.4 (Git PR Automation)**:
+  - Added `src/modules/git/git_client.js` using `simple-git` for fix branch creation, proposal application, commits, optional pushes, and optional GitHub PR creation through the REST API.
+  - Added GitHub automation configuration keys to `.env.example` and `simple-git` to dependencies.
+  - Verified via `npm run test:git` using an injected fake git client.
+- **Phase 3.5 (Auto-Recovery Verification)**:
+  - Added `src/modules/git/recovery.js` with recovery-window matching, automatic AI resolution updates, `incident:resolved` broadcasts, and an event-driven `RecoveryMonitor`.
+  - Verified via `npm run test:recovery`.

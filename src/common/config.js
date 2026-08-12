@@ -34,6 +34,12 @@ export const config = {
     provider: process.env.AI_PROVIDER || 'GROQ',
     apiKey: process.env.GROQ_API_KEY || process.env.OPENAI_API_KEY || '',
     model: process.env.AI_MODEL || 'llama-3.3-70b-versatile'
+  },
+  github: {
+    owner: process.env.GITHUB_OWNER || '',
+    repo: process.env.GITHUB_REPO || '',
+    token: process.env.GITHUB_TOKEN || process.env.GIT_ACCESS_TOKEN || '',
+    baseBranch: process.env.GITHUB_BASE_BRANCH || 'main'
   }
 };
 

@@ -57,6 +57,18 @@ export class MonitoringBroadcaster {
     return this.broadcast(WSEventType.VITALS_UPDATED, payload);
   }
 
+  diagnosisCreated(payload) {
+    return this.broadcast(WSEventType.DIAGNOSIS_CREATED, payload);
+  }
+
+  fixProposed(payload) {
+    return this.broadcast(WSEventType.FIX_PROPOSED, payload);
+  }
+
+  incidentResolved(payload) {
+    return this.broadcast(WSEventType.INCIDENT_RESOLVED, payload);
+  }
+
   close() {
     this.wss?.close();
     this.wss = null;
